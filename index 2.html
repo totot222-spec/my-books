@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fff">
+<title>My Books v1.0</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--accent:#ff7818;--bg:#f7f7f7;--card:#fff;--text:#222;--muted:#888;--line:#e5e5e5;--reader:#fffdf8;--font:18px;--lh:2.05;--pad:24px}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+button,input,textarea{font:inherit}button{border:0;background:none;color:inherit}.app{max-width:760px;margin:auto;min-height:100vh;background:var(--bg)}
+header{position:sticky;top:0;z-index:5;background:#fffffff2;backdrop-filter:blur(15px);padding:16px 18px 10px;border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}.title{font-size:21px;font-weight:800}.actions{display:flex;gap:7px}.iconbtn{width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 12px #00000012;font-size:25px}.back{color:var(--accent);padding:6px 0;font-weight:600}.tabs{display:flex;gap:8px;overflow:auto;padding-top:13px}.pill{border:1px solid #ddd;border-radius:20px;padding:8px 14px;background:#fff;white-space:nowrap;font-size:13px}.pill.active{border-color:var(--accent);color:var(--accent)}
+main{padding:18px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px 14px}.book{cursor:pointer;min-width:0}.cover{aspect-ratio:2/3;border-radius:5px;background:transparent;box-shadow:0 4px 10px #0002;display:block;padding:0;color:white;overflow:hidden;position:relative}.cover img{display:block;width:100%;height:100%;object-fit:cover;border-radius:5px;margin:0;padding:0;background:transparent}.cover{background:transparent}.cover span{font-family:serif;font-size:17px;font-weight:700;text-shadow:0 2px 5px #0008}.bookname{font-size:13px;font-weight:700;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{font-size:11px;color:var(--muted);margin-top:3px}.sectiontitle{font-size:18px;font-weight:800;margin:10px 0 16px}.detail{display:grid;grid-template-columns:140px 1fr;gap:18px}.detail .cover{width:140px;padding:0}.info h2{margin:0 0 6px;font-size:21px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:10px}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.primary{background:var(--accent);color:#fff;border-radius:12px;padding:10px 14px;font-weight:700}.secondary{background:#f0f0f0;border-radius:12px;padding:10px 14px}.danger{color:#d33}.chapter{padding:15px 2px;border-bottom:1px solid var(--line);cursor:pointer}.chapter:last-child{border-bottom:0}.chapter small{color:var(--muted)}.empty{text-align:center;color:var(--muted);padding:70px 10px}
+.reader{position:fixed;inset:0;background:var(--reader);z-index:20;overflow:auto}.readerbar{position:sticky;top:0;background:#fffdf8f2;backdrop-filter:blur(14px);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee}.readerbar button{padding:8px}.readerbody{max-width:700px;margin:auto;padding:38px var(--pad) 100px}.reader h1{font-family:serif;font-size:20px;margin:0 0 28px}.text{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:var(--font);line-height:var(--lh);letter-spacing:.03em;white-space:pre-wrap;word-break:break-word}.readerfooter{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:7px;padding:10px;background:linear-gradient(transparent,var(--reader) 30%);pointer-events:none}.readerfooter button{pointer-events:auto;background:#fff;border:1px solid #ddd;border-radius:20px;padding:7px 12px}
+.editarea{width:100%;min-height:58vh;border:1px solid #ddd;border-radius:12px;padding:16px;background:#fff;font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:17px;line-height:1.9}.modal{position:fixed;inset:0;background:#0006;z-index:30;display:flex;align-items:flex-end}.sheet{background:#fff;border-radius:22px 22px 0 0;width:100%;padding:20px;max-height:88vh;overflow:auto}.field{margin:12px 0}.field label{display:block;font-size:13px;color:#666;margin-bottom:6px}.field input,.field textarea{width:100%;border:1px solid #ddd;border-radius:10px;padding:11px;background:#fff}.coverpick{display:flex;align-items:center;gap:15px}.thumb{width:70px;height:100px;border-radius:5px;background:#eee;overflow:hidden}.thumb img{width:100%;height:100%;object-fit:cover}.menuitem{padding:15px 2px;border-bottom:1px solid var(--line)}.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;z-index:50;font-size:13px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body><div id="app" class="app"></div><input id="fileInput" type="file" hidden>
+<script>
+const KEY="my-books-v2", SET="my-books-settings";
+const sample=`最寄り駅から歩いて七分、ほぼ歩行者天国と化しているこの商店街は、スピーカーから流れる鈴の音と共にこの季節特有の音楽がその通りを満たしていた。
+
+防水加工がしてあるからといって、革靴を履いている日に雪が降るというのはあまり嬉しいことではない。しかし、例年よりもこの季節をうれしいと思ってしまうのは、光忠自身が浮かれているからという理由も多分にある。
+
+どこか高揚感に満ちた商店街を歩き、待ち合わせ場所となっている店を目指す。`;
+let db=load(); let settings=loadSettings(); let pendingImport=null;
+function seed(){return{books:[{id:"b1",title:"サンプル小説",author:"Sample",cover:"",volumes:[{id:"v1",title:"第1巻",chapters:[{id:"c1",title:"Chapter 01",text:sample},{id:"c2",title:"Chapter 02",text:"ここに第2章の本文を入れられます。"}]}]}]}}
+function load(){try{let x=JSON.parse(localStorage.getItem(KEY));if(x&&x.books)return x;let old=JSON.parse(localStorage.getItem("my-books-v1"));if(old&&old.books){localStorage.setItem(KEY,JSON.stringify(old));return old}return seed()}catch(e){return seed()}}
+function loadSettings(){try{return Object.assign({font:18,lh:2.05,pad:24,dark:false,dialogueBreak:true},JSON.parse(localStorage.getItem(SET))||{})}catch(e){return{font:18,lh:2.05,pad:24,dark:false}}}
+function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function saveSettings(){localStorage.setItem(SET,JSON.stringify(settings))}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function charCount(s){return String(s||"").replace(/[\r\n]/g,"").length}
+function book(id){return db.books.find(x=>x.id===id)} function vol(b,id){return b.volumes.find(x=>x.id===id)} function chap(b,v,id){return v.chapters.find(x=>x.id===id)}
+function toast(t){let x=document.createElement("div");x.className="toast";x.textContent=t;document.body.appendChild(x);setTimeout(()=>x.remove(),1500)}
+function cover(b){return b.cover?`<img src="${b.cover}" alt="">`:`<span>${esc(b.title)}</span>`}
+function shell(title,body,add=true){return `<header><div class="top"><button class="iconbtn" onclick="home()">☰</button><div class="title">${esc(title)}</div><div class="actions"><button class="iconbtn" onclick="searchPrompt()">⌕</button>${add?`<button class="iconbtn" onclick="addBook()">＋</button>`:""}</div></div><div class="tabs"><button class="pill active">本棚</button><button class="pill">未読</button><button class="pill">読書中</button><button class="pill">読了</button></div></header><main>${body}</main>`}
+function home(){let body=db.books.length?`<div class="grid">${db.books.map(b=>`<div class="book" onclick="bookView('${b.id}')"><div class="cover">${cover(b)}</div><div class="bookname">${esc(b.title)}</div><div class="meta">${b.volumes.length}巻 ・ ${b.volumes.reduce((n,v)=>n+v.chapters.length,0)}章</div></div>`).join("")}</div>`:`<div class="empty">まだ本がありません。<br>右上の「＋」から追加できます。</div>`;document.getElementById("app").innerHTML=shell("本棚",body)}
+function bookView(id){let b=book(id);document.getElementById("app").innerHTML=`<header><button class="back" onclick="home()">‹ 本棚</button><div class="top"><div class="title">${esc(b.title)}</div><button class="secondary" onclick="editBook('${id}')">編集</button></div></header><main><div class="detail"><div class="cover">${cover(b)}</div><div class="info"><h2>${esc(b.title)}</h2><div class="meta">${esc(b.author||"作者未設定")}</div><p>${b.volumes.length}巻</p><button class="primary" onclick="addVolume('${id}')">＋ 巻を追加</button></div></div><div class="sectiontitle">巻一覧</div>${b.volumes.length?b.volumes.map(v=>`<div class="card row" onclick="volumeView('${id}','${v.id}')"><div><b>${esc(v.title)}</b><div class="meta">${v.chapters.length} chapters ・ ${charCount(v.chapters.map(c=>c.text).join(""))}文字</div></div><span>›</span></div>`).join(""):`<div class="empty">まだ巻がありません。</div>`}</main>`}
+function volumeView(bid,vid){let b=book(bid),v=vol(b,vid);document.getElementById("app").innerHTML=`<header><button class="back" onclick="bookView('${bid}')">‹ ${esc(b.title)}</button><div class="top"><div class="title">${esc(v.title)}</div><button class="secondary" onclick="editVolume('${bid}','${vid}')">編集</button></div></header><main><div class="card" style="margin-bottom:14px"><div class="row"><div><b>巻の文字数</b><div class="meta">改行を除いてカウント ・ 読書進捗は章ごとに保存</div></div><strong>${charCount(v.chapters.map(c=>c.text).join(""))}文字</strong></div></div><div class="row"><div class="sectiontitle">チャプター</div><div style="display:flex;gap:7px"><button class="secondary" onclick="deleteChapterMenu('${bid}','${vid}')">削除</button><button class="secondary" onclick="importVolumeTXT('${bid}','${vid}')">TXT読み込み</button><button class="primary" onclick="addChapter('${bid}','${vid}')">＋ 追加</button></div></div><div class="card">${v.chapters.length?v.chapters.map((c,i)=>`<div class="chapter row" onclick="reader('${bid}','${vid}','${c.id}')"><div style="min-width:0"><b>Chapter ${String(i+1).padStart(2,"0")}</b><br><small>${esc(c.text.replace(/\s+/g,"").slice(0,42))}${c.text.length>42?"…":""}</small><br><small>${charCount(c.text)}文字</small></div><div style="display:flex;align-items:center;gap:7px"><span>›</span></div></div>`).join(""):`<div class="empty">まだチャプターがありません。</div>`}</div></main>`}
+function getProgress(cid){
+  let pos=+(localStorage.getItem("pos-"+cid)||0);
+  let max=+(localStorage.getItem("max-"+cid)||0);
+  if(max<=0) return 0;
+  return Math.max(0,Math.min(100,Math.round((pos/max)*100)));
+}
+function updateProgress(cid,r){
+  let max=Math.max(0,r.scrollHeight-r.clientHeight);
+  if(max>0)localStorage.setItem("max-"+cid,String(max));
+  let pct=max>0?Math.round((r.scrollTop/max)*100):0;
+  localStorage.setItem("progress-"+cid,String(Math.max(0,Math.min(100,pct))));
+  localStorage.setItem("pos-"+cid,String(r.scrollTop));
+}
+function chapterIndex(v,cid){return v.chapters.findIndex(c=>c.id===cid)}
+function reader(bid,vid,cid){let b=book(bid),v=vol(b,vid),c=chap(b,v,cid),pos=+(localStorage.getItem("pos-"+cid)||0),bm=localStorage.getItem("bm-"+cid)==="1",idx=chapterIndex(v,cid),pct=+(localStorage.getItem("progress-"+cid)||0);document.body.insertAdjacentHTML("beforeend",`<div class="reader" id="reader" style="${settings.dark?"--reader:#181818;--text:#eee":""}"><div class="readerbar"><button onclick="closeReader()">‹ 戻る</button><b>${esc(c.title)}</b><div><button onclick="toggleBookmark('${cid}')">${bm?"★":"☆"}</button><button onclick="editChapter('${bid}','${vid}','${cid}')">編集</button></div></div><div style="height:3px;background:#eee"><div id="progressbar" style="height:3px;width:${pct}%;background:var(--accent)"></div></div><article class="readerbody"><h1>${esc(b.title)}　${esc(v.title)}</h1><div class="text">${esc(c.text)}</div></article><div class="readerfooter"><span id="progressLabel" style="background:#fff;border:1px solid #ddd;border-radius:20px;padding:7px 11px;font-size:12px">${pct}%</span><button onclick="font(-1)">A−</button><button onclick="font(1)">A＋</button><button onclick="readerSettings()">設定</button><button onclick="readerTop()">↑</button></div><div style="position:fixed;left:0;right:0;bottom:62px;display:flex;justify-content:space-between;padding:0 14px;pointer-events:none"><button id="prevChap" onclick="goChapter('${bid}','${vid}',${idx-1})" style="pointer-events:auto;background:#fff;border:1px solid #ddd;border-radius:20px;padding:8px 12px;${idx<=0?'opacity:.35;pointer-events:none':''}">‹ 前の章</button><button id="nextChap" onclick="goChapter('${bid}','${vid}',${idx+1})" style="pointer-events:auto;background:#fff;border:1px solid #ddd;border-radius:20px;${idx>=v.chapters.length-1?'opacity:.35;pointer-events:none':''}">次の章 ›</button></div></div>`);let r=document.getElementById("reader");requestAnimationFrame(()=>{r.scrollTop=pos;updateProgress(cid,r);});r.onscroll=()=>{updateProgress(cid,r);let p=+(localStorage.getItem("progress-"+cid)||0);document.getElementById("progressbar")&&(document.getElementById("progressbar").style.width=p+"%");document.getElementById("progressLabel")&&(document.getElementById("progressLabel").textContent=p+"%")}}
+function goChapter(bid,vid,idx){let v=vol(book(bid),vid);if(idx<0||idx>=v.chapters.length)return;closeReader();reader(bid,vid,v.chapters[idx].id)}
+function closeReader(){document.getElementById("reader")?.remove()} function readerTop(){document.getElementById("reader")?.scrollTo({top:0,behavior:"smooth"})}
+function applyReader(){document.documentElement.style.setProperty("--font",settings.font+"px");document.documentElement.style.setProperty("--lh",settings.lh);document.documentElement.style.setProperty("--pad",settings.pad+"px")}
+function font(d){settings.font=Math.max(14,Math.min(28,settings.font+d));saveSettings();applyReader();let x=document.querySelector(".reader .text");if(x)x.style.fontSize=settings.font+"px"}
+function toggleBookmark(cid){let k="bm-"+cid;if(localStorage.getItem(k)==="1"){localStorage.removeItem(k);toast("しおりを外しました")}else{localStorage.setItem(k,"1");toast("しおりを保存しました")};let r=document.getElementById("reader");if(r){r.remove();let m=location.href;reader(currentB,currentV,currentC)}}
+let currentB="",currentV="",currentC="";const oldReader=reader;
+reader=function(bid,vid,cid){currentB=bid;currentV=vid;currentC=cid;oldReader(bid,vid,cid)}
+function readerSettings(){modal("読書設定",`<div class="field"><label>文字サイズ（${settings.font}px）</label><input id="fontRange" type="range" min="14" max="28" value="${settings.font}"></div><div class="field"><label>行間</label><input id="lhRange" type="range" min="1.5" max="2.6" step=".05" value="${settings.lh}"></div><div class="field"><label>左右の余白</label><input id="padRange" type="range" min="12" max="55" value="${settings.pad}"></div><label style="display:flex;align-items:center;gap:8px;margin:12px 0"><input id="dialogueBreak" type="checkbox" ${settings.dialogueBreak!==false?"checked":""}> 会話文の終了後に自動改行</label><p style="color:#777;font-size:12px;margin:4px 0 0">「君」は、のように助詞が続く引用は改行しません。</p><div class="field"><label>背景</label><button class="secondary" onclick="settings.dark=!settings.dark;saveSettings();document.getElementById('modal').remove();document.getElementById('reader').remove();reader(currentB,currentV,currentC)">白 / 黒を切替</button></div>`,`saveReaderSettings()`)}
+function saveReaderSettings(){settings.font=+document.getElementById("fontRange").value;settings.lh=+document.getElementById("lhRange").value;settings.pad=+document.getElementById("padRange").value;settings.dialogueBreak=document.getElementById("dialogueBreak")?.checked!==false;saveSettings();applyReader();document.getElementById("modal").remove();toast("設定を保存しました")}
+function modal(title,fields,submit){document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="modal"><div class="sheet"><div class="row"><h2>${title}</h2><button onclick="document.getElementById('modal').remove()">✕</button></div>${fields}<div style="display:flex;gap:8px;margin-top:18px"><button class="secondary" style="flex:1" onclick="document.getElementById('modal').remove()">キャンセル</button><button class="primary" style="flex:1" onclick="${submit}">保存</button></div></div></div>`)}
+function addBook(){modal("本を追加",`<div class="field"><label>作品名</label><input id="fTitle" placeholder="例：小説A"></div><div class="field"><label>作者</label><input id="fAuthor"></div><div class="field"><label>表紙</label><input id="coverFile" type="file" accept="image/*" onchange="previewCover(this)"><div id="coverPreview"></div></div>`,`createBook()`)}
+let newCover="";function previewCover(input){let f=input.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{newCover=r.result;document.getElementById("coverPreview").innerHTML=`<div class="thumb"><img src="${newCover}"></div>`};r.readAsDataURL(f)}
+function createBook(){db.books.push({id:uid(),title:document.getElementById("fTitle").value.trim()||"無題の小説",author:document.getElementById("fAuthor").value.trim(),cover:newCover,volumes:[]});newCover="";save();document.getElementById("modal").remove();home();toast("本を追加しました")}
+function editBook(id){let b=book(id);newCover=b.cover||"";modal("本を編集",`<div class="field"><label>作品名</label><input id="fTitle" value="${esc(b.title)}"></div><div class="field"><label>作者</label><input id="fAuthor" value="${esc(b.author||"")}"></div><div class="field"><label>表紙を変更</label><input id="coverFile" type="file" accept="image/*" onchange="previewCover(this)"><div id="coverPreview">${b.cover?`<div class="thumb"><img src="${b.cover}"></div>`:""}</div></div><button class="menuitem danger" onclick="deleteBook('${id}')">この本を削除</button>`,`updateBook('${id}')`)}
+function updateBook(id){let b=book(id);b.title=document.getElementById("fTitle").value.trim()||"無題の小説";b.author=document.getElementById("fAuthor").value.trim();b.cover=newCover;newCover="";save();document.getElementById("modal").remove();bookView(id)}
+function deleteBook(id){if(!confirm("この本を削除しますか？"))return;db.books=db.books.filter(b=>b.id!==id);save();document.getElementById("modal").remove();home();toast("削除しました")}
+function addVolume(bid){let b=book(bid);modal("巻を追加",`<div class="field"><label>巻タイトル</label><input id="fTitle" value="第${b.volumes.length+1}巻"></div>`,`createVolume('${bid}')`)}
+function createVolume(bid){let b=book(bid);b.volumes.push({id:uid(),title:document.getElementById("fTitle").value||"第1巻",chapters:[]});save();document.getElementById("modal").remove();bookView(bid)}
+function editVolume(bid,vid){let v=vol(book(bid),vid);modal("巻を編集",`<div class="field"><label>巻タイトル</label><input id="fTitle" value="${esc(v.title)}"></div><button class="menuitem danger" onclick="deleteVolume('${bid}','${vid}')">この巻を削除</button>`,`updateVolume('${bid}','${vid}')`)}
+function updateVolume(bid,vid){vol(book(bid),vid).title=document.getElementById("fTitle").value||"無題の巻";save();document.getElementById("modal").remove();bookView(bid)}
+function deleteVolume(bid,vid){if(!confirm("この巻を削除しますか？"))return;let b=book(bid);b.volumes=b.volumes.filter(v=>v.id!==vid);save();document.getElementById("modal").remove();bookView(bid)}
+function addChapter(bid,vid){let v=vol(book(bid),vid);modal("チャプターを追加",`<div class="field"><label>タイトル</label><input id="fTitle" value="Chapter ${String(v.chapters.length+1).padStart(2,"0")}"></div><div class="field"><label>本文</label><textarea id="fText" rows="12" placeholder="OCRした本文を貼り付け"></textarea></div><div class="field"><label>またはTXTを読み込む</label><input id="txtFile" type="file" accept=".txt,text/plain" onchange="readTxt(this)"></div><button class="secondary" onclick="cleanTextField()">OCR文章を整形</button>`,`createChapter('${bid}','${vid}')`)}
+function readTxt(input){let f=input.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{document.getElementById("fText").value=r.result;toast("TXTを読み込みました")};r.readAsText(f)}
+function cleanOCR(s){
+  s=String(s||"").replace(/\r\n?/g,"\n");
+
+  // OCRのRIDI/RID単独行を削除
+  s=s.replace(/^\s*(RIDI|RID)\s*$/gim,"");
+
+  // 行末の空白を整理
+  s=s.replace(/[ \t]+\n/g,"\n");
+
+  // OCRでカギ括弧だけが別行になった場合は結合
+  s=s.replace(/「\s*\n\s*/g,"「");
+  s=s.replace(/\n\s*」/g,"」");
+
+  // 「「」のような二重の開きカギを一つにする
+  s=s.replace(/「{2,}/g,"「");
+
+  // *** は区切りとして前後を空ける
+  s=s.replace(/[ \t]*\n?\*\*\*[ \t]*\n?/g,"\n\n***\n\n");
+
+  // OCRで分断された文章を、明らかな行末改行だけ結合
+  s=s.replace(/\n{3,}/g,"\n\n");
+  s=s.replace(/([^\n。！？？」』])\n(?=[ぁ-んァ-ン一-龥「『])/g,"$1");
+
+  if(settings.dialogueBreak!==false){
+    // まず「」の直後に別の会話「が続く場合は必ず改行。
+    // 例：「A」「B」 → 「A」\n「B」
+    s=s.replace(/」(?=\s*「)/g,"」\n\n");
+
+    // 同じ行に「会話＋地の文」が続く場合の基本的な改行。
+    // 助詞・読点などが続く「君」は改行しない。
+    const continuation=/^[はがをにのへでとやも、。！？：；・]/;
+    const lines=s.split("\n");
+    s=lines.map(line=>{
+      let out="", last=0;
+      for(let i=0;i<line.length;i++){
+        if(line[i]!=="」") continue;
+        const before=line.slice(last,i+1);
+        const open=before.lastIndexOf("「");
+        if(open<0) continue;
+        const prefix=before.slice(0,open).trim();
+        const dialogueStart=!prefix || /[。！？]$/.test(prefix);
+        const next=line[i+1]||"";
+        if(dialogueStart && next && !continuation.test(next) && next!=="「"){
+          out+=line.slice(last,i+1)+"\n\n";
+          last=i+1;
+        }
+      }
+      return out+line.slice(last);
+    }).join("\n");
+  }
+
+  // 単独行が「で始まらず、」で終わる明らかな会話OCR欠落を補正
+  let lines=s.split("\n");
+  lines=lines.map(line=>{
+    let t=line.trim();
+    if(!t || t==="***") return line;
+    if(t.endsWith("」") && !t.startsWith("「") && !t.includes("「")) return line.replace(/^(\s*)/,"$1「");
+    return line;
+  });
+  s=lines.join("\n");
+
+  // 「」で終わる会話の直後に次の「が来た場合は再保証
+  s=s.replace(/」[ \t]*\n?[ \t]*「/g,"」\n\n「");
+
+  // *** の前後を再保証
+  s=s.replace(/[ \t]*\n?\*\*\*[ \t]*\n?/g,"\n\n***\n\n");
+  s=s.replace(/\n{4,}/g,"\n\n");
+
+  return s.trim();
+}
+
+function cleanTextField(){let x=document.getElementById("fText");x.value=cleanOCR(x.value);toast("OCR文章を整形しました")}
+function createChapter(bid,vid){let v=vol(book(bid),vid);v.chapters.push({id:uid(),title:document.getElementById("fTitle").value||"Chapter",text:cleanOCR(document.getElementById("fText").value)});save();document.getElementById("modal").remove();volumeView(bid,vid)}
+function editChapter(bid,vid,cid){closeReader();let c=chap(book(bid),vol(book(bid),vid),cid);modal("チャプターを編集",`<div class="field"><label>タイトル</label><input id="fTitle" value="${esc(c.title)}"></div><div class="field"><label>本文</label><textarea id="fText" rows="18">${esc(c.text)}</textarea></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="secondary" onclick="cleanTextField()">OCR文章を整形</button><button class="secondary" onclick="bulkReplaceChapter('${bid}','${vid}','${cid}')">一括置換</button></div><div style="height:8px"></div><button class="menuitem danger" onclick="deleteChapter('${bid}','${vid}','${cid}')">このチャプターを削除</button>`,`updateChapter('${bid}','${vid}','${cid}')`)}
+function updateChapter(bid,vid,cid){let c=chap(book(bid),vol(book(bid),vid),cid);c.title=document.getElementById("fTitle").value;c.text=cleanOCR(document.getElementById("fText").value);save();document.getElementById("modal").remove();reader(bid,vid,cid);toast("保存しました")}
+function bulkReplaceChapter(bid,vid,cid){
+  let c=chap(book(bid),vol(book(bid),vid),cid);
+  if(!c)return;
+  // Close the edit sheet so the replacement dialog is independent.
+  document.getElementById("modal")?.remove();
+  document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="replaceModal"><div class="sheet"><div class="row"><h2>本文を一括置換</h2><button onclick="document.getElementById('replaceModal').remove()">✕</button></div><p style="color:#777;font-size:13px">このチャプターだけを対象にします。すべての一致箇所を一度に置き換えます。</p><div class="field"><label>検索する文字</label><textarea id="replaceFrom" rows="3" placeholder="例：ジョン・テウィ"></textarea></div><div class="field"><label>置き換え後</label><textarea id="replaceTo" rows="3" placeholder="例：チョン・テウィ"></textarea></div><label style="display:flex;align-items:center;gap:8px;font-size:14px;margin:10px 0"><input id="replaceRegex" type="checkbox"> 正規表現を使う</label><div style="display:flex;gap:8px;margin-top:18px"><button class="secondary" style="flex:1" onclick="document.getElementById('replaceModal').remove();editChapter('${bid}','${vid}','${cid}')">キャンセル</button><button class="primary" style="flex:1" onclick="applyBulkReplace('${bid}','${vid}','${cid}')">置換する</button></div></div></div>`);
+}
+function applyBulkReplace(bid,vid,cid){
+  let c=chap(book(bid),vol(book(bid),vid),cid);
+  let from=document.getElementById("replaceFrom")?.value||"";
+  let to=document.getElementById("replaceTo")?.value||"";
+  let useRegex=document.getElementById("replaceRegex")?.checked;
+  if(!from){toast("検索する文字を入力してください");return}
+  try{
+    let count=0;
+    if(useRegex){
+      let re=new RegExp(from,"g");
+      c.text=c.text.replace(re,()=>{count++;return to});
+    }else{
+      count=c.text.split(from).length-1;
+      c.text=c.text.split(from).join(to);
+    }
+    save();
+    document.getElementById("replaceModal")?.remove();
+    editChapter(bid,vid,cid);
+    toast(count?`${count}箇所を置換しました`:`一致する文字がありませんでした`);
+  }catch(e){toast("正規表現を確認してください")}
+}
+function deleteChapterMenu(bid,vid){
+  let b=book(bid), v=vol(b,vid);
+  if(!v.chapters.length){toast("削除できるチャプターがありません");return}
+  let fields=v.chapters.map((c,i)=>`<button class="menuitem" style="width:100%;text-align:left" onclick="deleteChapterByMenu('${bid}','${vid}','${c.id}')"><b>Chapter ${i+1}</b><br><small>${charCount(c.text)}文字 ・ ${esc(c.text.replace(/\s+/g,"").slice(0,55))}${c.text.length>55?"…":""}</small></button>`).join("");
+  document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="deleteModal"><div class="sheet"><div class="row"><h2>削除するチャプターを選択</h2><button onclick="document.getElementById('deleteModal').remove()">✕</button></div><p style="color:#777;font-size:13px">削除したチャプターは元に戻せません。</p>${fields}<button class="secondary" style="width:100%;margin-top:12px" onclick="document.getElementById('deleteModal').remove()">キャンセル</button></div></div>`);
+}
+function deleteChapterByMenu(bid,vid,cid){
+  let b=book(bid), v=vol(b,vid), idx=v.chapters.findIndex(c=>c.id===cid);
+  if(idx<0)return;
+  let label=`Chapter ${idx+1}`;
+  if(!confirm(label+"を削除しますか？"))return;
+  v.chapters.splice(idx,1);
+  save();
+  document.getElementById("deleteModal")?.remove();
+  volumeView(bid,vid);
+  toast("チャプターを削除しました");
+}
+function deleteChapterFromReader(bid,vid,cid){
+  if(!confirm("このチャプターを削除しますか？")) return;
+  let v=vol(book(bid),vid);
+  v.chapters=v.chapters.filter(c=>c.id!==cid);
+  save();
+  closeReader();
+  volumeView(bid,vid);
+  toast("チャプターを削除しました");
+}
+function deleteChapter(bid,vid,cid){if(!confirm("このチャプターを削除しますか？"))return;let v=vol(book(bid),vid);v.chapters=v.chapters.filter(c=>c.id!==cid);save();document.getElementById("modal").remove();volumeView(bid,vid)}
+
+function importVolumeTXT(bid,vid){
+  let input=document.createElement("input");
+  input.type="file"; input.accept=".txt,text/plain";
+  input.onchange=()=>{
+    let f=input.files[0]; if(!f)return;
+    let r=new FileReader();
+    r.onload=()=>{
+      let text=cleanOCR(String(r.result||""));
+      if(!text){toast("本文が見つかりません");return}
+      let v=vol(book(bid),vid);
+      let n=v.chapters.length+1;
+      v.chapters.push({
+        id:uid(),
+        title:`Chapter ${String(n).padStart(2,"0")}`,
+        text:text
+      });
+      save(); volumeView(bid,vid); toast("TXTを1チャプターとして追加しました");
+    };
+    r.readAsText(f);
+  };
+  input.click();
+}
+function searchPrompt(){let q=prompt("本棚を検索");if(!q)return;let hit=db.books.filter(b=>b.title.includes(q)||String(b.author).includes(q));document.getElementById("app").innerHTML=shell("検索結果",hit.length?`<div class="grid">${hit.map(b=>`<div class="book" onclick="bookView('${b.id}')"><div class="cover">${cover(b)}</div><div class="bookname">${esc(b.title)}</div></div>`).join("")}</div>`:`<div class="empty">見つかりませんでした。</div>`,false)}
+if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{}); applyReader();home();
+</script></body></html>
