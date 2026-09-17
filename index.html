@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#fff">
-<title>My Books v0.7</title>
+<title>My Books v0.9</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--accent:#ff7818;--bg:#f7f7f7;--card:#fff;--text:#222;--muted:#888;--line:#e5e5e5;--reader:#fffdf8;--font:18px;--lh:2.05;--pad:24px}
@@ -29,7 +29,7 @@ const sample=`最寄り駅から歩いて七分、ほぼ歩行者天国と化し
 let db=load(); let settings=loadSettings(); let pendingImport=null;
 function seed(){return{books:[{id:"b1",title:"サンプル小説",author:"Sample",cover:"",volumes:[{id:"v1",title:"第1巻",chapters:[{id:"c1",title:"Chapter 01",text:sample},{id:"c2",title:"Chapter 02",text:"ここに第2章の本文を入れられます。"}]}]}]}}
 function load(){try{let x=JSON.parse(localStorage.getItem(KEY));if(x&&x.books)return x;let old=JSON.parse(localStorage.getItem("my-books-v1"));if(old&&old.books){localStorage.setItem(KEY,JSON.stringify(old));return old}return seed()}catch(e){return seed()}}
-function loadSettings(){try{return Object.assign({font:18,lh:2.05,pad:24,dark:false},JSON.parse(localStorage.getItem(SET))||{})}catch(e){return{font:18,lh:2.05,pad:24,dark:false}}}
+function loadSettings(){try{return Object.assign({font:18,lh:2.05,pad:24,dark:false,dialogueBreak:true},JSON.parse(localStorage.getItem(SET))||{})}catch(e){return{font:18,lh:2.05,pad:24,dark:false}}}
 function save(){localStorage.setItem(KEY,JSON.stringify(db))}
 function saveSettings(){localStorage.setItem(SET,JSON.stringify(settings))}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
@@ -64,8 +64,8 @@ function font(d){settings.font=Math.max(14,Math.min(28,settings.font+d));saveSet
 function toggleBookmark(cid){let k="bm-"+cid;if(localStorage.getItem(k)==="1"){localStorage.removeItem(k);toast("しおりを外しました")}else{localStorage.setItem(k,"1");toast("しおりを保存しました")};let r=document.getElementById("reader");if(r){r.remove();let m=location.href;reader(currentB,currentV,currentC)}}
 let currentB="",currentV="",currentC="";const oldReader=reader;
 reader=function(bid,vid,cid){currentB=bid;currentV=vid;currentC=cid;oldReader(bid,vid,cid)}
-function readerSettings(){modal("読書設定",`<div class="field"><label>文字サイズ（${settings.font}px）</label><input id="fontRange" type="range" min="14" max="28" value="${settings.font}"></div><div class="field"><label>行間</label><input id="lhRange" type="range" min="1.5" max="2.6" step=".05" value="${settings.lh}"></div><div class="field"><label>左右の余白</label><input id="padRange" type="range" min="12" max="55" value="${settings.pad}"></div><div class="field"><label>背景</label><button class="secondary" onclick="settings.dark=!settings.dark;saveSettings();document.getElementById('modal').remove();document.getElementById('reader').remove();reader(currentB,currentV,currentC)">白 / 黒を切替</button></div>`,`saveReaderSettings()`)}
-function saveReaderSettings(){settings.font=+document.getElementById("fontRange").value;settings.lh=+document.getElementById("lhRange").value;settings.pad=+document.getElementById("padRange").value;saveSettings();applyReader();document.getElementById("modal").remove();toast("設定を保存しました")}
+function readerSettings(){modal("読書設定",`<div class="field"><label>文字サイズ（${settings.font}px）</label><input id="fontRange" type="range" min="14" max="28" value="${settings.font}"></div><div class="field"><label>行間</label><input id="lhRange" type="range" min="1.5" max="2.6" step=".05" value="${settings.lh}"></div><div class="field"><label>左右の余白</label><input id="padRange" type="range" min="12" max="55" value="${settings.pad}"></div><label style="display:flex;align-items:center;gap:8px;margin:12px 0"><input id="dialogueBreak" type="checkbox" ${settings.dialogueBreak!==false?"checked":""}> 会話文の終了後に自動改行</label><p style="color:#777;font-size:12px;margin:4px 0 0">「君」は、のように助詞が続く引用は改行しません。</p><div class="field"><label>背景</label><button class="secondary" onclick="settings.dark=!settings.dark;saveSettings();document.getElementById('modal').remove();document.getElementById('reader').remove();reader(currentB,currentV,currentC)">白 / 黒を切替</button></div>`,`saveReaderSettings()`)}
+function saveReaderSettings(){settings.font=+document.getElementById("fontRange").value;settings.lh=+document.getElementById("lhRange").value;settings.pad=+document.getElementById("padRange").value;settings.dialogueBreak=document.getElementById("dialogueBreak")?.checked!==false;saveSettings();applyReader();document.getElementById("modal").remove();toast("設定を保存しました")}
 function modal(title,fields,submit){document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="modal"><div class="sheet"><div class="row"><h2>${title}</h2><button onclick="document.getElementById('modal').remove()">✕</button></div>${fields}<div style="display:flex;gap:8px;margin-top:18px"><button class="secondary" style="flex:1" onclick="document.getElementById('modal').remove()">キャンセル</button><button class="primary" style="flex:1" onclick="${submit}">保存</button></div></div></div>`)}
 function addBook(){modal("本を追加",`<div class="field"><label>作品名</label><input id="fTitle" placeholder="例：小説A"></div><div class="field"><label>作者</label><input id="fAuthor"></div><div class="field"><label>表紙</label><input id="coverFile" type="file" accept="image/*" onchange="previewCover(this)"><div id="coverPreview"></div></div>`,`createBook()`)}
 let newCover="";function previewCover(input){let f=input.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{newCover=r.result;document.getElementById("coverPreview").innerHTML=`<div class="thumb"><img src="${newCover}"></div>`};r.readAsDataURL(f)}
@@ -92,18 +92,43 @@ function cleanOCR(s){
   // 「「」のような二重の開きカギを一つにする
   s=s.replace(/「{2,}/g,"「");
 
-  // *** は区切りとして残し、前後に空白行を入れる
+  // *** は区切りとして前後を空ける
   s=s.replace(/[ \t]*\*\*\*[ \t]*/g,"\n\n***\n\n");
 
-  // 文中の不要な改行を整理
+  // OCRで分断された文章を、明らかな行末改行だけ結合
   s=s.replace(/\n{3,}/g,"\n\n");
-  s=s.replace(/([^\n。！？」』])\n(?=[ぁ-んァ-ン一-龥「『])/g,"$1");
+  s=s.replace(/([^\n。！？？」』])\n(?=[ぁ-んァ-ン一-龥「『])/g,"$1");
 
-  // 改行整理後も *** の前後を保証
-  s=s.replace(/[ \t]*\*\*\*[ \t]*/g,"\n\n***\n\n");
+  // 会話文だけ：段落冒頭の「……」を閉じた後、助詞などが続く場合は改行しない。
+  // 例：「君」は…… → そのまま / 「ああ。」やはり…… → 改行
+  if(settings.dialogueBreak!==false){
+    const continuation=/^[はがをにのへでとやも、。！？：；・「『]/;
+    const lines=s.split("\n");
+    s=lines.map(line=>{
+      let out="", last=0;
+      for(let i=0;i<line.length;i++){
+        if(line[i]!=="」") continue;
+        const before=line.slice(last,i+1);
+        const open=before.lastIndexOf("「");
+        if(open<0) continue;
+        const prefix=before.slice(0,open).trim();
+        // 「」が行頭の会話（または直前が句読点後の会話）にある場合だけ対象
+        const dialogueStart=!prefix || /[。！？]$/.test(prefix);
+        const next=line[i+1]||"";
+        if(dialogueStart && next && !continuation.test(next)){
+          out+=line.slice(last,i+1)+"\n";
+          last=i+1;
+        }
+      }
+      return out+line.slice(last);
+    }).join("\n");
+  }
+
+  // *** の前後を再保証
+  s=s.replace(/[ \t]*\n?\*\*\*[ \t]*\n?/g,"\n\n***\n\n");
   s=s.replace(/\n{4,}/g,"\n\n");
 
-  // 末尾が「」なのに冒頭の「がない行には、冒頭に「を追加
+  // 末尾が「」なのに冒頭の「がない単独行は補正
   let lines=s.split("\n");
   lines=lines.map(line=>{
     let t=line.trim();
@@ -114,15 +139,43 @@ function cleanOCR(s){
   s=lines.join("\n");
 
   // 最後に *** の前後を再保証
-  s=s.replace(/[ \t]*\*\*\*[ \t]*/g,"\n\n***\n\n");
+  s=s.replace(/[ \t]*\n?\*\*\*[ \t]*\n?/g,"\n\n***\n\n");
   s=s.replace(/\n{4,}/g,"\n\n");
 
   return s.trim();
 }
 function cleanTextField(){let x=document.getElementById("fText");x.value=cleanOCR(x.value);toast("OCR文章を整形しました")}
 function createChapter(bid,vid){let v=vol(book(bid),vid);v.chapters.push({id:uid(),title:document.getElementById("fTitle").value||"Chapter",text:cleanOCR(document.getElementById("fText").value)});save();document.getElementById("modal").remove();volumeView(bid,vid)}
-function editChapter(bid,vid,cid){closeReader();let c=chap(book(bid),vol(book(bid),vid),cid);modal("チャプターを編集",`<div class="field"><label>タイトル</label><input id="fTitle" value="${esc(c.title)}"></div><div class="field"><label>本文</label><textarea id="fText" rows="18">${esc(c.text)}</textarea></div><button class="secondary" onclick="cleanTextField()">OCR文章を整形</button><div style="height:8px"></div><button class="menuitem danger" onclick="deleteChapter('${bid}','${vid}','${cid}')">このチャプターを削除</button>`,`updateChapter('${bid}','${vid}','${cid}')`)}
+function editChapter(bid,vid,cid){closeReader();let c=chap(book(bid),vol(book(bid),vid),cid);modal("チャプターを編集",`<div class="field"><label>タイトル</label><input id="fTitle" value="${esc(c.title)}"></div><div class="field"><label>本文</label><textarea id="fText" rows="18">${esc(c.text)}</textarea></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="secondary" onclick="cleanTextField()">OCR文章を整形</button><button class="secondary" onclick="bulkReplaceChapter('${bid}','${vid}','${cid}')">一括置換</button></div><div style="height:8px"></div><button class="menuitem danger" onclick="deleteChapter('${bid}','${vid}','${cid}')">このチャプターを削除</button>`,`updateChapter('${bid}','${vid}','${cid}')`)}
 function updateChapter(bid,vid,cid){let c=chap(book(bid),vol(book(bid),vid),cid);c.title=document.getElementById("fTitle").value;c.text=cleanOCR(document.getElementById("fText").value);save();document.getElementById("modal").remove();reader(bid,vid,cid);toast("保存しました")}
+function bulkReplaceChapter(bid,vid,cid){
+  let c=chap(book(bid),vol(book(bid),vid),cid);
+  if(!c)return;
+  // Close the edit sheet so the replacement dialog is independent.
+  document.getElementById("modal")?.remove();
+  document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="replaceModal"><div class="sheet"><div class="row"><h2>本文を一括置換</h2><button onclick="document.getElementById('replaceModal').remove()">✕</button></div><p style="color:#777;font-size:13px">このチャプターだけを対象にします。すべての一致箇所を一度に置き換えます。</p><div class="field"><label>検索する文字</label><textarea id="replaceFrom" rows="3" placeholder="例：ジョン・テウィ"></textarea></div><div class="field"><label>置き換え後</label><textarea id="replaceTo" rows="3" placeholder="例：チョン・テウィ"></textarea></div><label style="display:flex;align-items:center;gap:8px;font-size:14px;margin:10px 0"><input id="replaceRegex" type="checkbox"> 正規表現を使う</label><div style="display:flex;gap:8px;margin-top:18px"><button class="secondary" style="flex:1" onclick="document.getElementById('replaceModal').remove();editChapter('${bid}','${vid}','${cid}')">キャンセル</button><button class="primary" style="flex:1" onclick="applyBulkReplace('${bid}','${vid}','${cid}')">置換する</button></div></div></div>`);
+}
+function applyBulkReplace(bid,vid,cid){
+  let c=chap(book(bid),vol(book(bid),vid),cid);
+  let from=document.getElementById("replaceFrom")?.value||"";
+  let to=document.getElementById("replaceTo")?.value||"";
+  let useRegex=document.getElementById("replaceRegex")?.checked;
+  if(!from){toast("検索する文字を入力してください");return}
+  try{
+    let count=0;
+    if(useRegex){
+      let re=new RegExp(from,"g");
+      c.text=c.text.replace(re,()=>{count++;return to});
+    }else{
+      count=c.text.split(from).length-1;
+      c.text=c.text.split(from).join(to);
+    }
+    save();
+    document.getElementById("replaceModal")?.remove();
+    editChapter(bid,vid,cid);
+    toast(count?`${count}箇所を置換しました`:`一致する文字がありませんでした`);
+  }catch(e){toast("正規表現を確認してください")}
+}
 function deleteChapterMenu(bid,vid){
   let b=book(bid), v=vol(b,vid);
   if(!v.chapters.length){toast("削除できるチャプターがありません");return}
