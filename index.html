@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#fff">
-<title>My Books v0.5</title>
+<title>My Books v0.6</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--accent:#ff7818;--bg:#f7f7f7;--card:#fff;--text:#222;--muted:#888;--line:#e5e5e5;--reader:#fffdf8;--font:18px;--lh:2.05;--pad:24px}
@@ -41,8 +41,8 @@ function cover(b){return b.cover?`<img src="${b.cover}" alt="">`:`<span>${esc(b.
 function shell(title,body,add=true){return `<header><div class="top"><button class="iconbtn" onclick="home()">☰</button><div class="title">${esc(title)}</div><div class="actions"><button class="iconbtn" onclick="searchPrompt()">⌕</button>${add?`<button class="iconbtn" onclick="addBook()">＋</button>`:""}</div></div><div class="tabs"><button class="pill active">本棚</button><button class="pill">未読</button><button class="pill">読書中</button><button class="pill">読了</button></div></header><main>${body}</main>`}
 function home(){let body=db.books.length?`<div class="grid">${db.books.map(b=>`<div class="book" onclick="bookView('${b.id}')"><div class="cover">${cover(b)}</div><div class="bookname">${esc(b.title)}</div><div class="meta">${b.volumes.length}巻</div></div>`).join("")}</div>`:`<div class="empty">まだ本がありません。<br>右上の「＋」から追加できます。</div>`;document.getElementById("app").innerHTML=shell("本棚",body)}
 function bookView(id){let b=book(id);document.getElementById("app").innerHTML=`<header><button class="back" onclick="home()">‹ 本棚</button><div class="top"><div class="title">${esc(b.title)}</div><button class="secondary" onclick="editBook('${id}')">編集</button></div></header><main><div class="detail"><div class="cover">${cover(b)}</div><div class="info"><h2>${esc(b.title)}</h2><div class="meta">${esc(b.author||"作者未設定")}</div><p>${b.volumes.length}巻</p><button class="primary" onclick="addVolume('${id}')">＋ 巻を追加</button></div></div><div class="sectiontitle">巻一覧</div>${b.volumes.length?b.volumes.map(v=>`<div class="card row" onclick="volumeView('${id}','${v.id}')"><div><b>${esc(v.title)}</b><div class="meta">${v.chapters.length} chapters ・ ${charCount(v.chapters.map(c=>c.text).join(""))}文字</div></div><span>›</span></div>`).join(""):`<div class="empty">まだ巻がありません。</div>`}</main>`}
-function volumeView(bid,vid){let b=book(bid),v=vol(b,vid);document.getElementById("app").innerHTML=`<header><button class="back" onclick="bookView('${bid}')">‹ ${esc(b.title)}</button><div class="top"><div class="title">${esc(v.title)}</div><button class="secondary" onclick="editVolume('${bid}','${vid}')">編集</button></div></header><main><div class="card" style="margin-bottom:14px"><div class="row"><div><b>巻の文字数</b><div class="meta">改行を除いてカウント</div></div><strong>${charCount(v.chapters.map(c=>c.text).join(""))}文字</strong></div></div><div class="row"><div class="sectiontitle">チャプター</div><div style="display:flex;gap:7px"><button class="secondary" onclick="importVolumeTXT('${bid}','${vid}')">TXT読み込み</button><button class="primary" onclick="addChapter('${bid}','${vid}')">＋ 追加</button></div></div><div class="card">${v.chapters.length?v.chapters.map(c=>`<div class="chapter row" onclick="reader('${bid}','${vid}','${c.id}')"><div style="min-width:0"><b>${esc(c.title)}</b><br><small>${esc(c.text.replace(/\s+/g,"").slice(0,42))}${c.text.length>42?"…":""}</small><br><small>${charCount(c.text)}文字</small></div><div style="display:flex;align-items:center;gap:7px"><button class="secondary" style="padding:7px 9px" onclick="event.stopPropagation();deleteChapter('${bid}','${vid}','${c.id}')">削除</button><span>›</span></div></div>`).join(""):`<div class="empty">まだチャプターがありません。</div>`}</div></main>`}
-function reader(bid,vid,cid){let b=book(bid),v=vol(b,vid),c=chap(b,v,cid),pos=JSON.parse(localStorage.getItem("pos-"+cid)||"0"),bm=localStorage.getItem("bm-"+cid)==="1";document.body.insertAdjacentHTML("beforeend",`<div class="reader" id="reader" style="${settings.dark?"--reader:#181818;--text:#eee":""}"><div class="readerbar"><button onclick="closeReader()">‹ 戻る</button><b>${esc(c.title)}</b><div><button onclick="toggleBookmark('${cid}')">${bm?"★":"☆"}</button><button onclick="editChapter('${bid}','${vid}','${cid}')">編集</button><button onclick="deleteChapterFromReader('${bid}','${vid}','${cid}')">削除</button></div></div><article class="readerbody"><h1>${esc(b.title)}　${esc(v.title)}</h1><div class="text">${esc(c.text)}</div></article><div class="readerfooter"><button onclick="font(-1)">A−</button><button onclick="font(1)">A＋</button><button onclick="readerSettings()">設定</button><button onclick="readerTop()">↑</button></div></div>`);let r=document.getElementById("reader");r.scrollTop=pos;r.onscroll=()=>{if(r.scrollTop%20<5)localStorage.setItem("pos-"+cid,JSON.stringify(r.scrollTop))}}
+function volumeView(bid,vid){let b=book(bid),v=vol(b,vid);document.getElementById("app").innerHTML=`<header><button class="back" onclick="bookView('${bid}')">‹ ${esc(b.title)}</button><div class="top"><div class="title">${esc(v.title)}</div><button class="secondary" onclick="editVolume('${bid}','${vid}')">編集</button></div></header><main><div class="card" style="margin-bottom:14px"><div class="row"><div><b>巻の文字数</b><div class="meta">改行を除いてカウント</div></div><strong>${charCount(v.chapters.map(c=>c.text).join(""))}文字</strong></div></div><div class="row"><div class="sectiontitle">チャプター</div><div style="display:flex;gap:7px"><button class="secondary" onclick="deleteChapterMenu('${bid}','${vid}')">削除</button><button class="secondary" onclick="importVolumeTXT('${bid}','${vid}')">TXT読み込み</button><button class="primary" onclick="addChapter('${bid}','${vid}')">＋ 追加</button></div></div><div class="card">${v.chapters.length?v.chapters.map((c,i)=>`<div class="chapter row" onclick="reader('${bid}','${vid}','${c.id}')"><div style="min-width:0"><b>Chapter ${String(i+1).padStart(2,"0")}</b><br><small>${esc(c.text.replace(/\s+/g,"").slice(0,42))}${c.text.length>42?"…":""}</small><br><small>${charCount(c.text)}文字</small></div><div style="display:flex;align-items:center;gap:7px"><span>›</span></div></div>`).join(""):`<div class="empty">まだチャプターがありません。</div>`}</div></main>`}
+function reader(bid,vid,cid){let b=book(bid),v=vol(b,vid),c=chap(b,v,cid),pos=JSON.parse(localStorage.getItem("pos-"+cid)||"0"),bm=localStorage.getItem("bm-"+cid)==="1";document.body.insertAdjacentHTML("beforeend",`<div class="reader" id="reader" style="${settings.dark?"--reader:#181818;--text:#eee":""}"><div class="readerbar"><button onclick="closeReader()">‹ 戻る</button><b>${esc(c.title)}</b><div><button onclick="toggleBookmark('${cid}')">${bm?"★":"☆"}</button><button onclick="editChapter('${bid}','${vid}','${cid}')">編集</button></div></div><article class="readerbody"><h1>${esc(b.title)}　${esc(v.title)}</h1><div class="text">${esc(c.text)}</div></article><div class="readerfooter"><button onclick="font(-1)">A−</button><button onclick="font(1)">A＋</button><button onclick="readerSettings()">設定</button><button onclick="readerTop()">↑</button></div></div>`);let r=document.getElementById("reader");r.scrollTop=pos;r.onscroll=()=>{if(r.scrollTop%20<5)localStorage.setItem("pos-"+cid,JSON.stringify(r.scrollTop))}}
 function closeReader(){document.getElementById("reader")?.remove()} function readerTop(){document.getElementById("reader")?.scrollTo({top:0,behavior:"smooth"})}
 function applyReader(){document.documentElement.style.setProperty("--font",settings.font+"px");document.documentElement.style.setProperty("--lh",settings.lh);document.documentElement.style.setProperty("--pad",settings.pad+"px")}
 function font(d){settings.font=Math.max(14,Math.min(28,settings.font+d));saveSettings();applyReader();let x=document.querySelector(".reader .text");if(x)x.style.fontSize=settings.font+"px"}
@@ -67,25 +67,64 @@ function addChapter(bid,vid){let v=vol(book(bid),vid);modal("チャプターを�
 function readTxt(input){let f=input.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{document.getElementById("fText").value=r.result;toast("TXTを読み込みました")};r.readAsText(f)}
 function cleanOCR(s){
   s=String(s||"").replace(/\r\n?/g,"\n");
+
+  // OCRのRIDI/RID単独行を削除
   s=s.replace(/^\s*(RIDI|RID)\s*$/gim,"");
+
+  // 行末の空白を整理
   s=s.replace(/[ \t]+\n/g,"\n");
-  /* *** は区切りとして残し、その前後に必ず空白行を入れる */
-  s=s.replace(/\n[ \t]*\*\*\*[ \t]*/g,"\n\n*** ");
-  s=s.replace(/^[ \t]*\*\*\*[ \t]*/g,"*** ");
-  s=s.replace(/[ \t]*\*\*\*[ \t]*\n/g," ***\n\n");
-  /* 上の変換で *** の直前に余計な空白が付いた場合を整える */
-  s=s.replace(/[ \t]+\*\*\*/g,"***");
+
+  // 「「」のような二重の開きカギを一つにする
+  s=s.replace(/「{2,}/g,"「");
+
+  // *** は区切りとして残し、前後に空白行を入れる
+  s=s.replace(/[ \t]*\*\*\*[ \t]*/g,"\n\n***\n\n");
+
+  // 文中の不要な改行を整理
   s=s.replace(/\n{3,}/g,"\n\n");
   s=s.replace(/([^\n。！？」』])\n(?=[ぁ-んァ-ン一-龥「『])/g,"$1");
-  /* 改行を消す処理の後でも *** 前後を再保証 */
+
+  // 改行整理後も *** の前後を保証
   s=s.replace(/[ \t]*\*\*\*[ \t]*/g,"\n\n***\n\n");
   s=s.replace(/\n{4,}/g,"\n\n");
+
+  // 末尾が「」なのに冒頭の「がない行には、冒頭に「を追加
+  let lines=s.split("\n");
+  lines=lines.map(line=>{
+    let t=line.trim();
+    if(!t || t==="***") return line;
+    if(t.endsWith("」") && !t.startsWith("「")) return line.replace(/^(\s*)/,"$1「");
+    return line;
+  });
+  s=lines.join("\n");
+
+  // 最後に *** の前後を再保証
+  s=s.replace(/[ \t]*\*\*\*[ \t]*/g,"\n\n***\n\n");
+  s=s.replace(/\n{4,}/g,"\n\n");
+
   return s.trim();
 }
 function cleanTextField(){let x=document.getElementById("fText");x.value=cleanOCR(x.value);toast("OCR文章を整形しました")}
 function createChapter(bid,vid){let v=vol(book(bid),vid);v.chapters.push({id:uid(),title:document.getElementById("fTitle").value||"Chapter",text:cleanOCR(document.getElementById("fText").value)});save();document.getElementById("modal").remove();volumeView(bid,vid)}
 function editChapter(bid,vid,cid){closeReader();let c=chap(book(bid),vol(book(bid),vid),cid);modal("チャプターを編集",`<div class="field"><label>タイトル</label><input id="fTitle" value="${esc(c.title)}"></div><div class="field"><label>本文</label><textarea id="fText" rows="18">${esc(c.text)}</textarea></div><button class="secondary" onclick="cleanTextField()">OCR文章を整形</button><div style="height:8px"></div><button class="menuitem danger" onclick="deleteChapter('${bid}','${vid}','${cid}')">このチャプターを削除</button>`,`updateChapter('${bid}','${vid}','${cid}')`)}
 function updateChapter(bid,vid,cid){let c=chap(book(bid),vol(book(bid),vid),cid);c.title=document.getElementById("fTitle").value;c.text=cleanOCR(document.getElementById("fText").value);save();document.getElementById("modal").remove();reader(bid,vid,cid);toast("保存しました")}
+function deleteChapterMenu(bid,vid){
+  let b=book(bid), v=vol(b,vid);
+  if(!v.chapters.length){toast("削除できるチャプターがありません");return}
+  let fields=v.chapters.map((c,i)=>`<button class="menuitem" style="width:100%;text-align:left" onclick="deleteChapterByMenu('${bid}','${vid}','${c.id}')"><b>Chapter ${i+1}</b><br><small>${charCount(c.text)}文字 ・ ${esc(c.text.replace(/\s+/g,"").slice(0,55))}${c.text.length>55?"…":""}</small></button>`).join("");
+  document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="deleteModal"><div class="sheet"><div class="row"><h2>削除するチャプターを選択</h2><button onclick="document.getElementById('deleteModal').remove()">✕</button></div><p style="color:#777;font-size:13px">削除したチャプターは元に戻せません。</p>${fields}<button class="secondary" style="width:100%;margin-top:12px" onclick="document.getElementById('deleteModal').remove()">キャンセル</button></div></div>`);
+}
+function deleteChapterByMenu(bid,vid,cid){
+  let b=book(bid), v=vol(b,vid), idx=v.chapters.findIndex(c=>c.id===cid);
+  if(idx<0)return;
+  let label=`Chapter ${idx+1}`;
+  if(!confirm(label+"を削除しますか？"))return;
+  v.chapters.splice(idx,1);
+  save();
+  document.getElementById("deleteModal")?.remove();
+  volumeView(bid,vid);
+  toast("チャプターを削除しました");
+}
 function deleteChapterFromReader(bid,vid,cid){
   if(!confirm("このチャプターを削除しますか？")) return;
   let v=vol(book(bid),vid);
