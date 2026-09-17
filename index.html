@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>My Books</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{
+  --accent:#ff7a1a; --bg:#f7f7f7; --card:#fff; --text:#222; --muted:#777;
+  --line:#e6e6e6; --reader:#fffdf8;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:var(--text);background:var(--bg)}
+button,input,textarea{font:inherit}
+button{border:0;background:none}
+.app{max-width:760px;margin:auto;min-height:100vh;background:var(--bg)}
+header{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.94);backdrop-filter:blur(16px);padding:18px 18px 10px;border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;justify-content:space-between}
+.title{font-size:22px;font-weight:800}
+.iconbtn{width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 12px #00000012;font-size:24px}
+.actions{display:flex;gap:8px}
+.tabs{display:flex;gap:8px;overflow:auto;padding-top:16px}
+.pill{border:1px solid #ddd;border-radius:20px;padding:8px 14px;background:#fff;white-space:nowrap;font-size:13px}
+.pill.active{border-color:var(--accent);color:var(--accent)}
+main{padding:18px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px 14px}
+.book{cursor:pointer}
+.cover{aspect-ratio:2/3;border-radius:4px;background:linear-gradient(145deg,#17233b,#6c3d49 55%,#e7b873);box-shadow:0 4px 10px #0002;display:flex;align-items:flex-end;padding:12px;color:white;overflow:hidden}
+.cover span{font-family:serif;font-size:18px;font-weight:700;text-shadow:0 2px 5px #0008}
+.bookname{font-size:13px;font-weight:700;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{font-size:11px;color:var(--muted);margin-top:3px}
+.sectiontitle{font-size:18px;font-weight:800;margin:10px 0 16px}
+.back{font-size:14px;color:var(--accent);padding:6px 0}
+.detail{display:grid;grid-template-columns:140px 1fr;gap:18px;align-items:start}
+.detail .cover{width:140px}
+.info h2{margin:0 0 8px;font-size:22px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:10px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.chapter{padding:15px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.chapter:last-child{border-bottom:0}
+.chapter small{color:var(--muted)}
+.primary{background:var(--accent);color:white;border-radius:12px;padding:11px 15px;font-weight:700}
+.secondary{background:#f1f1f1;border-radius:12px;padding:11px 15px}
+.empty{text-align:center;color:var(--muted);padding:70px 10px}
+.hidden{display:none!important}
+
+/* reader */
+.reader{position:fixed;inset:0;background:var(--reader);z-index:20;overflow:auto}
+.readerbar{position:sticky;top:0;background:rgba(255,253,248,.94);backdrop-filter:blur(14px);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee}
+.readerbar button{padding:8px 10px}
+.readerbody{max-width:700px;margin:auto;padding:38px 24px 90px}
+.reader h1{font-family:serif;font-size:20px;margin:0 0 28px}
+.text{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:18px;line-height:2.05;letter-spacing:.03em;white-space:pre-wrap;word-break:break-word}
+.readerfooter{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:8px;padding:10px;background:linear-gradient(transparent,var(--reader) 30%);pointer-events:none}
+.readerfooter button{pointer-events:auto;background:#fff;border:1px solid #ddd;border-radius:20px;padding:7px 13px}
+.editbox{width:100%;min-height:60vh;border:1px solid #ddd;border-radius:12px;padding:18px;background:#fff;font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:18px;line-height:2}
+.modal{position:fixed;inset:0;background:#0006;z-index:30;display:flex;align-items:flex-end}
+.sheet{background:#fff;border-radius:22px 22px 0 0;width:100%;padding:20px;max-height:85vh;overflow:auto}
+.field{margin:12px 0}.field label{display:block;font-size:13px;color:#666;margin-bottom:6px}.field input,.field textarea{width:100%;border:1px solid #ddd;border-radius:10px;padding:11px;background:#fff}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;z-index:50;font-size:13px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}.readerbody{padding-left:48px;padding-right:48px}}
+</style>
+</head>
+<body>
+<div id="app" class="app"></div>
+
+<script>
+const KEY="my-books-v1";
+const sampleText=`最寄り駅から歩いて七分、ほぼ歩行者天国と化しているこの商店街は、スピーカーから流れる鈴の音と共にこの季節特有の音楽がその通りを満たしていた。
+
+防水加工がしてあるからといって、革靴を履いている日に雪が降るというのはあまり嬉しいことではない。しかし、例年よりもこの季節をうれしいと思ってしまうのは、光忠自身が浮かれているからという理由も多分にある。
+
+どこか高揚感に満ちた商店街を歩き、待ち合わせ場所となっている店を目指す。本来なら、今日の約束の相手とは大学時代より気安い関係が続く間柄であった。しかし、今僅かな緊張を抱いてしまうのは、彼に対して後ろめたい思いがあるからに他ならない。
+
+彼にしては珍しい、急な食事の約束だった。いつも簡素で事務的なメールしかよこさない男だったが、なぜか今回のメールは時間と店名だけという、さらに無駄を省いた文面になっていた。`;
+
+let db=load();
+function load(){
+  try{return JSON.parse(localStorage.getItem(KEY))||seed()}catch(e){return seed()}
+}
+function seed(){
+  return {books:[{id:"b1",title:"サンプル小説",author:"Sample",volumes:[{id:"v1",title:"第1巻",chapters:[
+    {id:"c1",title:"Chapter 01",text:sampleText},
+    {id:"c2",title:"Chapter 02",text:"ここに第2章の本文を入れられます。\\n\\nOCRした文章を編集して保存できます。"}
+  ]}]}]};
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function findBook(id){return db.books.find(x=>x.id===id)}
+function findVol(book,id){return book.volumes.find(x=>x.id===id)}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function toast(t){let x=document.createElement("div");x.className="toast";x.textContent=t;document.body.appendChild(x);setTimeout(()=>x.remove(),1500)}
+
+function shell(title,body){
+  return `<header><div class="top"><button class="iconbtn" onclick="home()">☰</button><div class="title">${esc(title)}</div><div class="actions"><button class="iconbtn" onclick="searchPrompt()">⌕</button><button class="iconbtn" onclick="addBook()">＋</button></div></div><div class="tabs"><button class="pill active">購入済み</button><button class="pill">未読</button><button class="pill">ダウンロード済み</button></div></header><main>${body}</main>`;
+}
+function home(){
+  let body=db.books.length?`<div class="grid">${db.books.map(b=>`<div class="book" onclick="bookView('${b.id}')"><div class="cover"><span>${esc(b.title)}</span></div><div class="bookname">${esc(b.title)}</div><div class="meta">${b.volumes.length}巻</div></div>`).join("")}</div>`:`<div class="empty">まだ本がありません。<br>右上の「＋」から追加できます。</div>`;
+  document.getElementById("app").innerHTML=shell("本棚",body);
+}
+function bookView(id){
+  let b=findBook(id);
+  document.getElementById("app").innerHTML=`<header><button class="back" onclick="home()">‹ 本棚</button><div class="title">${esc(b.title)}</div></header><main>
+  <div class="detail"><div class="cover"><span>${esc(b.title)}</span></div><div class="info"><h2>${esc(b.title)}</h2><div class="meta">${esc(b.author||"作者未設定")}</div><p>${b.volumes.length}巻</p><button class="primary" onclick="addVolume('${b.id}')">＋ 巻を追加</button></div></div>
+  <div class="sectiontitle">巻一覧</div>
+  ${b.volumes.map(v=>`<div class="card row" onclick="volumeView('${b.id}','${v.id}')"><div><b>${esc(v.title)}</b><div class="meta">${v.chapters.length} chapters</div></div><span>›</span></div>`).join("")}
+  </main>`;
+}
+function volumeView(bid,vid){
+  let b=findBook(bid),v=findVol(b,vid);
+  document.getElementById("app").innerHTML=`<header><button class="back" onclick="bookView('${bid}')">‹ ${esc(b.title)}</button><div class="title">${esc(v.title)}</div></header><main>
+  <div class="row"><div class="sectiontitle">チャプター</div><button class="primary" onclick="addChapter('${bid}','${vid}')">＋ 追加</button></div>
+  <div class="card">${v.chapters.map((c,i)=>`<div class="chapter row" onclick="reader('${bid}','${vid}','${c.id}')"><div><b>${esc(c.title)}</b><br><small>${c.text.replace(/\\s+/g,"").slice(0,35)}…</small></div><span>›</span></div>`).join("")}</div>
+  </main>`;
+}
+function reader(bid,vid,cid){
+  let b=findBook(bid),v=findVol(b,vid),c=v.chapters.find(x=>x.id===cid);
+  document.body.insertAdjacentHTML("beforeend",`<div class="reader" id="reader"><div class="readerbar"><button onclick="closeReader()">‹ 戻る</button><b>${esc(c.title)}</b><button onclick="editChapter('${bid}','${vid}','${cid}')">編集</button></div><article class="readerbody"><h1>${esc(b.title)}　${esc(v.title)}</h1><div class="text">${esc(c.text)}</div></article><div class="readerfooter"><button onclick="font(-1)">A−</button><button onclick="font(1)">A＋</button><button onclick="readerTop()">↑</button></div></div>`);
+}
+function closeReader(){document.getElementById("reader")?.remove()}
+function readerTop(){document.getElementById("reader").scrollTo({top:0,behavior:"smooth"})}
+function font(d){let el=document.querySelector("#reader .text");let n=parseFloat(getComputedStyle(el).fontSize)+d;el.style.fontSize=Math.max(14,Math.min(28,n))+"px"}
+
+function modal(title,fields,submit){
+  document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="modal"><div class="sheet"><div class="row"><h2>${title}</h2><button onclick="document.getElementById('modal').remove()">✕</button></div>${fields}<div style="display:flex;gap:8px;margin-top:18px"><button class="secondary" style="flex:1" onclick="document.getElementById('modal').remove()">キャンセル</button><button class="primary" style="flex:1" onclick="${submit}">保存</button></div></div></div>`);
+}
+function addBook(){
+  modal("本を追加",`<div class="field"><label>作品名</label><input id="fTitle" placeholder="例：小説A"></div><div class="field"><label>作者</label><input id="fAuthor" placeholder="任意"></div>`,`createBook()`);
+}
+function createBook(){
+  let title=document.getElementById("fTitle").value.trim()||"無題の小説";
+  db.books.push({id:uid(),title,author:document.getElementById("fAuthor").value.trim(),volumes:[]});save();document.getElementById("modal").remove();home();toast("本を追加しました");
+}
+function addVolume(bid){
+  modal("巻を追加",`<div class="field"><label>巻タイトル</label><input id="fTitle" value="第${findBook(bid).volumes.length+1}巻"></div>`,`createVolume('${bid}')`);
+}
+function createVolume(bid){
+  let b=findBook(bid);b.volumes.push({id:uid(),title:document.getElementById("fTitle").value||"第1巻",chapters:[]});save();document.getElementById("modal").remove();bookView(bid);
+}
+function addChapter(bid,vid){
+  modal("チャプターを追加",`<div class="field"><label>タイトル</label><input id="fTitle" value="Chapter ${String(findVol(findBook(bid),vid).chapters.length+1).padStart(2,"0")}"></div><div class="field"><label>本文</label><textarea id="fText" rows="12" placeholder="OCRした本文を貼り付け"></textarea></div>`,`createChapter('${bid}','${vid}')`);
+}
+function createChapter(bid,vid){
+  let v=findVol(findBook(bid),vid);v.chapters.push({id:uid(),title:document.getElementById("fTitle").value||"Chapter",text:document.getElementById("fText").value});save();document.getElementById("modal").remove();volumeView(bid,vid);
+}
+function editChapter(bid,vid,cid){
+  closeReader();let c=findVol(findBook(bid),vid).chapters.find(x=>x.id===cid);
+  modal("本文を編集",`<div class="field"><label>タイトル</label><input id="fTitle" value="${esc(c.title)}"></div><div class="field"><label>本文</label><textarea id="fText" rows="18">${esc(c.text)}</textarea></div>`,`updateChapter('${bid}','${vid}','${cid}')`);
+}
+function updateChapter(bid,vid,cid){
+  let c=findVol(findBook(bid),vid).chapters.find(x=>x.id===cid);c.title=document.getElementById("fTitle").value;c.text=document.getElementById("fText").value;save();document.getElementById("modal").remove();reader(bid,vid,cid);toast("保存しました");
+}
+function searchPrompt(){
+  let q=prompt("本棚を検索");if(!q)return;
+  let hit=db.books.filter(b=>b.title.includes(q));
+  document.getElementById("app").innerHTML=shell("検索結果",hit.length?`<div class="grid">${hit.map(b=>`<div class="book" onclick="bookView('${b.id}')"><div class="cover"><span>${esc(b.title)}</span></div><div class="bookname">${esc(b.title)}</div></div>`).join("")}</div>`:`<div class="empty">「${esc(q)}」は見つかりませんでした。</div>`);
+}
+home();
+</script>
+</body>
+</html>

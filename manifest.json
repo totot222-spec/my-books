@@ -1,0 +1,9 @@
+{
+  "name":"My Books",
+  "short_name":"My Books",
+  "start_url":"./index.html",
+  "display":"standalone",
+  "background_color":"#f7f7f7",
+  "theme_color":"#ffffff",
+  "lang":"ja"
+}
