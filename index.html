@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#fff">
-<title>My Books v0.9</title>
+<title>My Books v1.0</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--accent:#ff7818;--bg:#f7f7f7;--card:#fff;--text:#222;--muted:#888;--line:#e5e5e5;--reader:#fffdf8;--font:18px;--lh:2.05;--pad:24px}
@@ -89,20 +89,28 @@ function cleanOCR(s){
   // 行末の空白を整理
   s=s.replace(/[ \t]+\n/g,"\n");
 
+  // OCRでカギ括弧だけが別行になった場合は結合
+  s=s.replace(/「\s*\n\s*/g,"「");
+  s=s.replace(/\n\s*」/g,"」");
+
   // 「「」のような二重の開きカギを一つにする
   s=s.replace(/「{2,}/g,"「");
 
   // *** は区切りとして前後を空ける
-  s=s.replace(/[ \t]*\*\*\*[ \t]*/g,"\n\n***\n\n");
+  s=s.replace(/[ \t]*\n?\*\*\*[ \t]*\n?/g,"\n\n***\n\n");
 
   // OCRで分断された文章を、明らかな行末改行だけ結合
   s=s.replace(/\n{3,}/g,"\n\n");
   s=s.replace(/([^\n。！？？」』])\n(?=[ぁ-んァ-ン一-龥「『])/g,"$1");
 
-  // 会話文だけ：段落冒頭の「……」を閉じた後、助詞などが続く場合は改行しない。
-  // 例：「君」は…… → そのまま / 「ああ。」やはり…… → 改行
   if(settings.dialogueBreak!==false){
-    const continuation=/^[はがをにのへでとやも、。！？：；・「『]/;
+    // まず「」の直後に別の会話「が続く場合は必ず改行。
+    // 例：「A」「B」 → 「A」\n「B」
+    s=s.replace(/」(?=\s*「)/g,"」\n\n");
+
+    // 同じ行に「会話＋地の文」が続く場合の基本的な改行。
+    // 助詞・読点などが続く「君」は改行しない。
+    const continuation=/^[はがをにのへでとやも、。！？：；・]/;
     const lines=s.split("\n");
     s=lines.map(line=>{
       let out="", last=0;
@@ -112,11 +120,10 @@ function cleanOCR(s){
         const open=before.lastIndexOf("「");
         if(open<0) continue;
         const prefix=before.slice(0,open).trim();
-        // 「」が行頭の会話（または直前が句読点後の会話）にある場合だけ対象
         const dialogueStart=!prefix || /[。！？]$/.test(prefix);
         const next=line[i+1]||"";
-        if(dialogueStart && next && !continuation.test(next)){
-          out+=line.slice(last,i+1)+"\n";
+        if(dialogueStart && next && !continuation.test(next) && next!=="「"){
+          out+=line.slice(last,i+1)+"\n\n";
           last=i+1;
         }
       }
@@ -124,26 +131,26 @@ function cleanOCR(s){
     }).join("\n");
   }
 
-  // *** の前後を再保証
-  s=s.replace(/[ \t]*\n?\*\*\*[ \t]*\n?/g,"\n\n***\n\n");
-  s=s.replace(/\n{4,}/g,"\n\n");
-
-  // 末尾が「」なのに冒頭の「がない単独行は補正
+  // 単独行が「で始まらず、」で終わる明らかな会話OCR欠落を補正
   let lines=s.split("\n");
   lines=lines.map(line=>{
     let t=line.trim();
     if(!t || t==="***") return line;
-    if(t.endsWith("」") && !t.startsWith("「")) return line.replace(/^(\s*)/,"$1「");
+    if(t.endsWith("」") && !t.startsWith("「") && !t.includes("「")) return line.replace(/^(\s*)/,"$1「");
     return line;
   });
   s=lines.join("\n");
 
-  // 最後に *** の前後を再保証
+  // 「」で終わる会話の直後に次の「が来た場合は再保証
+  s=s.replace(/」[ \t]*\n?[ \t]*「/g,"」\n\n「");
+
+  // *** の前後を再保証
   s=s.replace(/[ \t]*\n?\*\*\*[ \t]*\n?/g,"\n\n***\n\n");
   s=s.replace(/\n{4,}/g,"\n\n");
 
   return s.trim();
 }
+
 function cleanTextField(){let x=document.getElementById("fText");x.value=cleanOCR(x.value);toast("OCR文章を整形しました")}
 function createChapter(bid,vid){let v=vol(book(bid),vid);v.chapters.push({id:uid(),title:document.getElementById("fTitle").value||"Chapter",text:cleanOCR(document.getElementById("fText").value)});save();document.getElementById("modal").remove();volumeView(bid,vid)}
 function editChapter(bid,vid,cid){closeReader();let c=chap(book(bid),vol(book(bid),vid),cid);modal("チャプターを編集",`<div class="field"><label>タイトル</label><input id="fTitle" value="${esc(c.title)}"></div><div class="field"><label>本文</label><textarea id="fText" rows="18">${esc(c.text)}</textarea></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="secondary" onclick="cleanTextField()">OCR文章を整形</button><button class="secondary" onclick="bulkReplaceChapter('${bid}','${vid}','${cid}')">一括置換</button></div><div style="height:8px"></div><button class="menuitem danger" onclick="deleteChapter('${bid}','${vid}','${cid}')">このチャプターを削除</button>`,`updateChapter('${bid}','${vid}','${cid}')`)}
