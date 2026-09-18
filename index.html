@@ -265,6 +265,24 @@ function joinBrokenLines(text){
  if(buffer!==null) out.push(buffer);
  return out.join("\n");
 }
+function insertDialogueBreaksBefore(text){
+ // 文末記号（。！？…」』）の直後にある「または-は、会話の始まりとみなして直前に改行する。
+ // 文の途中（助詞などの後）にある「はそのまま＝説明・強調の「」として扱い、改行しない。
+ const sentenceEnd=["。","！","？","…","」","』"];
+ const openers=["「","-"];
+ let result="";
+ for(let i=0;i<text.length;i++){
+  let ch=text[i];
+  if(openers.includes(ch)){
+   let prev=result.length?result[result.length-1]:"\n";
+   let atLineStart=prev==="\n";
+   let afterSentenceEnd=sentenceEnd.includes(prev);
+   if(!atLineStart && afterSentenceEnd) result+="\n";
+  }
+  result+=ch;
+ }
+ return result;
+}
 function insertDialogueBreaks(text){
  // 「」の直後が助詞・読点などの続き言葉でなければ、会話文の終わりとみなして改行する
  const continuations=["と","という","っていう","とか","も","は","が","を","に","で","や","の","から","まで","ば","たら","なら","って","、","）",")","」","』"];
@@ -366,6 +384,7 @@ function runFormatTools(){
  if(document.getElementById("ft-brackets")?.checked) text=fixDuplicateBrackets(text);
  if(document.getElementById("ft-ellipsis")?.checked) text=normalizeEllipsis(text);
  if(document.getElementById("ft-joinlines")?.checked) text=joinBrokenLines(text);
+ if(document.getElementById("ft-dialogue")?.checked) text=insertDialogueBreaksBefore(text);
  if(document.getElementById("ft-dialogue")?.checked) text=insertDialogueBreaks(text);
  if(document.getElementById("ft-scene")?.checked) text=addSceneBreakSpacing(text);
  el.value=text;
@@ -587,7 +606,7 @@ function editChapter(){
    <label class="chk"><input type="checkbox" id="ft-brackets" checked> 重複した鉤括弧を修正（「「→「、間に空白があっても対象）</label>
    <label class="chk"><input type="checkbox" id="ft-ellipsis" checked> 連続したピリオドを「……」に変換（........→……）</label>
    <label class="chk"><input type="checkbox" id="ft-joinlines" checked> 文末（。！？」など）で終わっていない行を次の行と結合（OCRの改行ズレ修正）</label>
-   <label class="chk"><input type="checkbox" id="ft-dialogue" checked> 会話の「」の後で改行（説明・強調の「」は続き言葉を見て除外）</label>
+   <label class="chk"><input type="checkbox" id="ft-dialogue" checked> 会話文「」・-の前後で改行（文末記号の直後のみ。説明・強調の「」や地の文中の-は除外）</label>
    <label class="chk"><input type="checkbox" id="ft-scene" checked> *** の前後に空白行を入れる</label>
   </div>
   <button class="secondary" onclick="runFormatTools()" style="margin-top:9px;width:100%">整形を実行</button>
