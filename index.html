@@ -385,7 +385,11 @@ function renderDetail(){
    <div id="vol-${v.id}" class="chapter-list">${v.chapters.map((c,ci)=>`<div class="chapter" onclick="openChapter('${v.id}','${c.id}')">
     <div class="chapter-main"><div class="chapter-name">${esc(c.title||`Chapter ${String(ci+1).padStart(2,"0")}`)}</div><div class="chapter-desc">${esc(c.text.slice(0,70))}</div></div>
     <div class="chapter-count">${count(c.text).toLocaleString()}文字　›</div>
-   </div>`).join("")}<div class="addrow row"><button class="secondary" onclick="event.stopPropagation();addChapter('${v.id}')">＋ チャプター追加</button><button class="secondary" onclick="event.stopPropagation();bulkImport('${v.id}')">📋 一括インポート</button></div></div>
+   </div>`).join("")}<div class="addrow">
+    <div class="row" style="margin-bottom:8px"><button class="secondary" onclick="event.stopPropagation();addChapter('${v.id}')">＋ チャプター追加</button><button class="secondary" onclick="event.stopPropagation();bulkImport('${v.id}')">📋 貼り付け取込</button></div>
+    <input type="file" id="file-${v.id}" class="hidden" accept=".txt,.md,.csv,text/plain" multiple onchange="importTextFiles(this,'${v.id}')">
+    <button class="secondary" style="width:100%" onclick="event.stopPropagation();document.getElementById('file-${v.id}').click()">📄 ファイルから読み込み</button>
+   </div></div>
   </div>`).join("")}
   </div>
   ${b.synopsis?`<div class="section-head" style="margin-top:26px"><h2>あらすじ</h2></div><div id="syn" class="synopsis clamped">${esc(b.synopsis)}</div><button class="more-btn" onclick="toggleSynopsis()">もっと見る ▾</button>`:""}
@@ -466,6 +470,75 @@ function saveChapterEdit(){let c=chapter();c.title=document.getElementById("ec-t
 function deleteChapter(){if(!confirm("このチャプターを削除しますか？"))return;let v=volume();v.chapters=v.chapters.filter(c=>c.id!==state.chapterId);v.chapters.forEach((c,i)=>c.title=`Chapter ${String(i+1).padStart(2,"0")}`);save();closeModal();state.chapterId=null;renderDetail()}
 function addChapter(vid){let v=book().volumes.find(x=>x.id===vid);v.chapters.push({id:uid("c"),title:`Chapter ${String(v.chapters.length+1).padStart(2,"0")}`,text:""});save();renderDetail()}
 function addVolume(){let b=book();b.volumes.push({id:uid("v"),name:`第${b.volumes.length+1}巻`,chapters:[]});save();renderDetail()}
+function importTextFiles(inputEl,vid){
+ const files=[...inputEl.files];
+ inputEl.value="";
+ if(!files.length) return;
+ files.sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+ let texts=new Array(files.length); let done=0;
+ files.forEach((f,i)=>{
+  const r=new FileReader();
+  r.onload=()=>{
+   texts[i]={name:f.name.replace(/\.[^.]+$/,""),body:String(r.result||"")};
+   if(++done===files.length) finishFileImport(vid,texts);
+  };
+  r.onerror=()=>{
+   texts[i]={name:f.name,body:""};
+   if(++done===files.length) finishFileImport(vid,texts);
+  };
+  r.readAsText(f,"utf-8");
+ });
+}
+function finishFileImport(vid,texts){
+ const joined=texts.map(t=>t.body).join("\n");
+ modal(`<h2>ファイルから読み込み</h2>
+ <div class="small" style="margin-bottom:12px">${texts.length}個のファイルを読み込みました（ファイル名順）。</div>
+ <div class="field"><label>取り込み方法</label>
+  <div class="fmtopts">
+   <label class="chk"><input type="radio" name="fi-mode" value="perfile" ${texts.length>1?"checked":""}> ファイル1つ＝1チャプター（ファイル名をタイトルに）</label>
+   <label class="chk"><input type="radio" name="fi-mode" value="marker" ${texts.length>1?"":"checked"}> 全部つなげて、区切り文字で分割する</label>
+  </div>
+ </div>
+ <div class="field"><label>章の区切り文字（上の「区切り文字で分割」を選んだ場合）</label><input id="fi-marker" placeholder="例: 제1장"></div>
+ <div class="field"><label>プレビュー（先頭200文字）</label><textarea readonly style="min-height:110px">${esc(joined.slice(0,200))}</textarea></div>
+ <div class="actions"><button class="primary" onclick='runFileImport("${vid}")'>インポート</button><button class="secondary" onclick="closeModal()">キャンセル</button></div>`);
+ window.__pendingFiles=texts;
+}
+function runFileImport(vid){
+ const texts=window.__pendingFiles||[];
+ if(!texts.length){closeModal();return}
+ const mode=document.querySelector('input[name="fi-mode"]:checked')?.value||"perfile";
+ const marker=document.getElementById("fi-marker").value.trim();
+ let v=book().volumes.find(x=>x.id===vid);
+ if(!v){closeModal();return}
+ if(mode==="perfile"){
+  texts.forEach(t=>{
+   v.chapters.push({id:uid("c"),title:t.name||`Chapter ${String(v.chapters.length+1).padStart(2,"0")}`,text:t.body.trim()});
+  });
+ } else {
+  const all=texts.map(t=>t.body).join("\n");
+  let chunks=[];
+  if(marker){
+   let cur=null;
+   all.split("\n").forEach(line=>{
+    if(line.trim().startsWith(marker)){
+     if(cur) chunks.push(cur);
+     cur={title:line.trim(),body:[]};
+    } else {
+     if(!cur) cur={title:"",body:[]};
+     cur.body.push(line);
+    }
+   });
+   if(cur) chunks.push(cur);
+  } else chunks=[{title:"",body:all.split("\n")}];
+  chunks.forEach(ch=>{
+   v.chapters.push({id:uid("c"),title:ch.title||`Chapter ${String(v.chapters.length+1).padStart(2,"0")}`,text:ch.body.join("\n").trim()});
+  });
+ }
+ window.__pendingFiles=null;
+ try{save()}catch(e){alert("保存できませんでした。容量が上限に達した可能性があります。")}
+ closeModal();renderDetail();
+}
 function bulkImport(vid){
  modal(`<h2>一括インポート</h2>
  <div class="field"><label>章の区切り文字（任意）</label><input id="bi-marker" placeholder="例: 제1장 　※この文字で始まる行で章を分割します"></div>
