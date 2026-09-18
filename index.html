@@ -3,126 +3,180 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#ffffff">
-<title>My Books v1.3</title>
+<meta name="theme-color" content="#f7fbfe">
+<title>My Books</title>
 <style>
-:root{--accent:#1686e8;--bg:#f7fbfe;--paper:#fffefa;--text:#202124;--muted:#818994;--line:#e2eaf0}
-*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
-button,input,textarea{font:inherit}button{border:0;background:none;color:inherit}.hidden{display:none!important}
-.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
-.topin{height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 18px}.ttl{font-size:23px;font-weight:800}.back{font-size:17px;color:var(--accent);font-weight:700}
-.round{width:46px;height:46px;border-radius:50%;background:#fff;box-shadow:0 5px 18px #00000012;font-size:25px}
-.page{max-width:960px;margin:auto;padding:20px 18px 100px}.filters{display:flex;gap:9px;overflow:auto;margin-bottom:20px}.pill{border:1px solid #ddd;background:#fff;border-radius:999px;padding:10px 18px;white-space:nowrap}.pill.on{border-color:var(--accent);color:var(--accent)}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 14px}@media(min-width:760px){.grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
-.cover{aspect-ratio:2/3;border-radius:8px;overflow:hidden;background:linear-gradient(145deg,#8fd3f4,#dff4ff 55%,#83badc);box-shadow:0 7px 20px #0002;display:flex;align-items:flex-end}
-.cover img{width:100%;height:100%;object-fit:cover;display:block}.cover span{padding:13px;color:#fff;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;font-weight:700;font-size:18px;white-space:pre-line;text-shadow:0 2px 8px #0005}
-.bn{font-weight:750;font-size:15px;margin-top:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.meta{font-size:13px;color:var(--muted);margin-top:4px}.book{cursor:pointer}
-.detail{display:grid;grid-template-columns:135px 1fr;gap:18px}.dname{font-size:27px;font-weight:850;margin:2px 0 9px}.stats{color:var(--muted);line-height:1.8}
-.primary,.secondary{padding:12px 17px;border-radius:13px;font-weight:700}.primary{background:var(--accent);color:white}.secondary{background:white;border:1px solid #ddd}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-h2{margin-top:28px}.vol{background:#fff;border:1px solid var(--line);border-radius:17px;overflow:hidden;margin:12px 0}.vh{padding:16px 17px;font-size:19px;font-weight:800;display:flex;justify-content:space-between}.ch{padding:15px 17px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center}.cm{flex:1;min-width:0}.ct{font-weight:700}.preview{font-size:13px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px}.cc{font-size:12px;color:#888;white-space:nowrap}
-.reader{min-height:100vh;background:var(--paper)}.reader .top{background:rgba(255,253,248,.96)}.rb{max-width:900px;margin:auto;padding:26px 27px 150px}.text{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:22px;line-height:2.05;letter-spacing:.02em;white-space:pre-wrap}.text.vert{writing-mode:vertical-rl;text-orientation:mixed;height:calc(100vh - 220px);overflow-x:auto;line-height:1.9}
-.controls{position:fixed;z-index:30;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:5px;padding:7px;background:#fffc;border:1px solid #ddd;border-radius:18px;backdrop-filter:blur(12px);white-space:nowrap}.controls button{padding:9px 11px;border-radius:11px}.controls .on{background:#eee}
-.modalback{position:fixed;inset:0;background:#0006;z-index:100;display:flex;align-items:flex-end}.modal{width:100%;max-height:88vh;overflow:auto;background:#fff;border-radius:24px 24px 0 0;padding:20px}.field{margin:13px 0}.field label{display:block;font-size:13px;color:#666;font-weight:700;margin-bottom:6px}.field input,.field textarea{width:100%;padding:11px;border:1px solid #ddd;border-radius:11px}.field textarea{height:330px;line-height:1.8}.danger{color:#d33}.search{width:100%;padding:13px;border:1px solid #ddd;border-radius:13px;margin-bottom:18px}
+:root{--blue:#1686e8;--bg:#f7fbfe;--card:#fff;--text:#17202b;--muted:#8793a0;--line:#e4edf4;--paper:#fffdf8;--shadow:0 5px 18px rgba(28,74,110,.10)}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+button,input,textarea,select{font:inherit}button{border:0;background:none;color:inherit;cursor:pointer}
+.top{position:sticky;top:0;z-index:20;background:rgba(247,251,254,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topin{height:72px;display:grid;grid-template-columns:92px 1fr 92px;align-items:center;padding:0 16px}
+.ttl{text-align:center;font-size:21px;font-weight:800}.left{text-align:left}.right{display:flex;justify-content:flex-end;gap:8px}
+.round{width:42px;height:42px;border-radius:50%;background:#fff;box-shadow:var(--shadow);font-size:23px;display:grid;place-items:center}
+.back{color:var(--blue);font-weight:750;font-size:16px;padding:10px 0}
+.page{max-width:960px;margin:auto;padding:20px 18px 105px}
+.filters{display:flex;gap:9px;overflow:auto;padding:2px 0 22px}
+.pill{padding:9px 17px;border:1px solid #dce7ef;background:#fff;border-radius:999px;white-space:nowrap;color:#607080}
+.pill.on{border-color:var(--blue);color:var(--blue);background:#f2f8ff}
+.sectionrow{display:flex;align-items:end;justify-content:space-between;margin:0 0 14px}
+.sectiontitle{font-size:22px;font-weight:850}.small{font-size:13px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 13px}
+@media(min-width:760px){.grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:28px 20px}}
+.cover{aspect-ratio:2/3;border-radius:9px;overflow:hidden;background:linear-gradient(155deg,#dbefff,#b9dff8 55%,#eaf6ff);box-shadow:var(--shadow);display:flex;align-items:flex-end;position:relative}
+.cover img{width:100%;height:100%;object-fit:cover;display:block}.cover span{padding:13px;color:#2e6388;font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-weight:800;font-size:16px;line-height:1.4;overflow-wrap:anywhere}
+.bn{font-weight:750;font-size:14px;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{font-size:12px;color:var(--muted);margin-top:3px}.book{min-width:0}
+.search{width:100%;padding:13px 15px;border:1px solid #dce7ef;background:#fff;border-radius:14px;margin-bottom:18px;outline:none}.hidden{display:none!important}
+.empty{text-align:center;color:var(--muted);padding:65px 15px}
+.detail{display:grid;grid-template-columns:130px 1fr;gap:18px;align-items:start}.dname{font-size:25px;font-weight:850;margin:2px 0 9px}.stats{font-size:14px;color:var(--muted);line-height:1.8}
+.primary,.secondary{padding:11px 16px;border-radius:13px;font-weight:750}.primary{background:var(--blue);color:#fff}.secondary{background:#fff;border:1px solid #dce7ef}.danger{color:#d64747}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+h2{font-size:21px;margin:30px 0 13px}.vol{background:#fff;border:1px solid var(--line);border-radius:17px;overflow:hidden;margin:12px 0}
+.vh{padding:15px 16px;font-size:18px;font-weight:800;display:flex;justify-content:space-between;align-items:center}.vmeta{font-size:12px;color:var(--muted);font-weight:500}
+.ch{padding:14px 16px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center}.cm{flex:1;min-width:0}.ct{font-weight:750}.preview{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px}.cc{font-size:12px;color:var(--muted);white-space:nowrap}
+.reader{min-height:100vh;background:var(--paper)}.reader .top{background:rgba(255,253,248,.96)}.rb{max-width:900px;margin:auto;padding:26px 25px 145px}.text{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:21px;line-height:2.05;letter-spacing:.02em;white-space:pre-wrap}
+.text.vert{writing-mode:vertical-rl;text-orientation:mixed;height:calc(100vh - 205px);overflow-x:auto;line-height:1.9}
+.controls{position:fixed;z-index:30;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:4px;padding:7px;background:#fffd;border:1px solid #ddd;border-radius:18px;backdrop-filter:blur(12px);box-shadow:var(--shadow);white-space:nowrap}
+.controls button{padding:8px 10px;border-radius:10px}.controls .on{background:#eaf4fc;color:var(--blue)}
+.modalback{position:fixed;inset:0;background:#0006;z-index:100;display:flex;align-items:flex-end}.modal{width:100%;max-height:88vh;overflow:auto;background:#fff;border-radius:24px 24px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom))}
+.modal h2{margin:0 0 16px}.field{margin:13px 0}.field label{display:block;font-size:13px;color:#66717d;font-weight:700;margin-bottom:6px}.field input,.field textarea,.field select{width:100%;padding:11px;border:1px solid #dce3e8;border-radius:11px;background:#fff}.field textarea{height:330px;line-height:1.8;resize:vertical}
+.bottom{position:fixed;bottom:0;left:0;right:0;height:74px;padding-bottom:env(safe-area-inset-bottom);background:rgba(255,255,255,.96);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:25;backdrop-filter:blur(14px)}
+.bottom button{width:33%;font-size:11px;color:#66717d}.bottom .big{display:block;font-size:22px;margin-bottom:2px;color:var(--blue)}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
 "use strict";
-const KEY="my-books-data-v1";
-const sample={books:[
-{id:"b1",title:"サンプル小説",cover:"",volumes:[{id:"v1",name:"第1巻",chapters:[{id:"c1",title:"Chapter 01",text:"「これはサンプルの文章です。」\nジェギョンは静かに窓の外を見た。\n「今日は寒いね。」\n「そうだな。」"}]}]},
-{id:"b2",title:"ホンブル",cover:"",volumes:[{id:"v1",name:"第1巻",chapters:[{id:"c1",title:"Chapter 01",text:"「サンプルの会話文です。」\nここから地の文が続きます。"}]}]}
-]};
 
-function normalizeBook(b,i){
-  const oldCount=Number(b?.volumes)||0;
-  const vols=Array.isArray(b?.volumes)
-    ? b.volumes.map((v,j)=>({
-        id:v?.id||("v"+Date.now()+i+j),
-        name:v?.name||`第${j+1}巻`,
-        chapters:Array.isArray(v?.chapters)?v.chapters.map((c,k)=>({
-          id:c?.id||("c"+Date.now()+i+j+k),
-          title:c?.title||`Chapter ${String(k+1).padStart(2,"0")}`,
-          text:typeof c?.text==="string"?c.text:""
-        })):[]
-      }))
-    : Array.from({length:oldCount},(_,j)=>({
-        id:"v"+Date.now()+i+j,
-        name:`第${j+1}巻`,
-        chapters:[]
-      }));
-  return {id:b?.id||("b"+Date.now()+i),title:b?.title||`作品${i+1}`,cover:b?.cover||"",volumes:vols};
-}
+/* 保存キー。過去版の保存データも下の loadData() で引き継ぎます。 */
+const KEY="my-books-data-v2";
+const OLD_KEYS=["my-books-data-v1","my-books-v11","my-books-v1"];
 
-function loadData(){
-  const keys=[KEY,"my-books-v11","my-books-v1"];
-  for(const key of keys){
-    try{
-      const raw=localStorage.getItem(key);
-      if(!raw) continue;
-      const parsed=JSON.parse(raw);
-      const books=Array.isArray(parsed)?parsed:(Array.isArray(parsed?.books)?parsed.books:null);
-      if(books){
-        const normalized={books:books.map(normalizeBook)};
-        localStorage.setItem(KEY,JSON.stringify(normalized));
-        return normalized;
-      }
-    }catch(e){}
-  }
-  const fresh={books:sample.books.map(normalizeBook)};
-  localStorage.setItem(KEY,JSON.stringify(fresh));
-  return fresh;
-}
+const sampleBooks=[
+ {id:"sample1",title:"サンプル小説",cover:"",status:"unread",volumes:[{id:"sv1",name:"第1巻",chapters:[{id:"sc1",title:"Chapter 01",text:"「これはサンプルの文章です。」\n\nジェギョンは静かに窓の外を見た。\n「今日は寒いね。」\n「そうだな。」"}]}]},
+ {id:"sample2",title:"ホンブル",cover:"",status:"reading",volumes:[{id:"hv1",name:"第1巻",chapters:[{id:"hc1",title:"Chapter 01",text:"「サンプルの会話文です。」\n\nここから地の文が続きます。"}]}]},
+ {id:"sample3",title:"テスト作品",cover:"",status:"unread",volumes:[{id:"tv1",name:"第1巻",chapters:[]},{id:"tv2",name:"第2巻",chapters:[]}]}
+];
 
-let data=loadData();
-let st={book:null,vol:null,ch:null,vertical:localStorage.getItem("vertical")==="1"};
-
-const $=s=>document.querySelector(s);
+const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
 const chars=s=>[...(s||"")].filter(x=>!/\s/.test(x)).length;
-const save=()=>localStorage.setItem(KEY,JSON.stringify(data));
-const B=()=>data.books.find(x=>x.id===st.book);
-const V=()=>B()?.volumes.find(x=>x.id===st.vol);
-const C=()=>V()?.chapters.find(x=>x.id===st.ch);
-const id=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+function normalizeBook(b,i){
+ const n=Number(b&&b.volumes);
+ let vols;
+ if(Array.isArray(b&&b.volumes)){
+   vols=b.volumes.map((v,j)=>({
+     id:v&&v.id||uid("v"),
+     name:v&&v.name||`第${j+1}巻`,
+     chapters:Array.isArray(v&&v.chapters)?v.chapters.map((c,k)=>({
+       id:c&&c.id||uid("c"),
+       title:c&&c.title||`Chapter ${String(k+1).padStart(2,"0")}`,
+       text:typeof (c&&c.text)==="string"?c.text:""
+     })):[]
+   }));
+ }else{
+   vols=Array.from({length:Number.isFinite(n)&&n>0?n:0},(_,j)=>({id:uid("v"),name:`第${j+1}巻`,chapters:[]}));
+ }
+ return {id:b&&b.id||uid("b"),title:b&&b.title||`作品${i+1}`,cover:b&&b.cover||"",status:["unread","reading","done"].includes(b&&b.status)?b.status:"unread",volumes:vols};
+}
+function parseStored(raw){
+ const p=JSON.parse(raw);
+ const arr=Array.isArray(p)?p:(p&&Array.isArray(p.books)?p.books:null);
+ return arr?{books:arr.map(normalizeBook)}:null;
+}
+function loadData(){
+ for(const k of [KEY,...OLD_KEYS]){
+   try{
+     const raw=localStorage.getItem(k);
+     if(!raw)continue;
+     const d=parseStored(raw);
+     if(d){localStorage.setItem(KEY,JSON.stringify(d));return d}
+   }catch(e){}
+ }
+ const d={books:sampleBooks.map(normalizeBook)};
+ localStorage.setItem(KEY,JSON.stringify(d));
+ return d;
+}
+let data=loadData();
+let st={book:null,vol:null,ch:null,filter:"all",search:"",vertical:localStorage.getItem("my-books-vertical")==="1",font:Number(localStorage.getItem("my-books-font"))||21};
+
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+function B(){return data.books.find(x=>x.id===st.book)}
+function V(){return B()?.volumes.find(x=>x.id===st.vol)}
+function C(){return V()?.chapters.find(x=>x.id===st.ch)}
 function bcount(b){return (b.volumes||[]).reduce((n,v)=>n+(v.chapters||[]).reduce((a,c)=>a+chars(c.text),0),0)}
 function cover(b){return b.cover?`<div class="cover"><img src="${esc(b.cover)}" alt=""></div>`:`<div class="cover"><span>${esc(b.title)}</span></div>`}
-function top(title,back,right=""){return `<div class="top"><div class="topin"><button class="back" onclick="${back||""}">${back?"‹ 戻る":""}</button><div class="ttl">${esc(title)}</div><div>${right}</div></div></div>`}
-function modal(x){let d=document.createElement("div");d.id="modal";d.className="modalback";d.innerHTML=`<div class="modal">${x}</div>`;d.onclick=e=>{if(e.target===d)closeM()};document.body.appendChild(d)}
-function closeM(){$("#modal")?.remove()}
+function top(title,back,right=""){return `<div class="top"><div class="topin"><div class="left">${back?`<button class="back" onclick="${back}">‹ 戻る</button>`:""}</div><div class="ttl">${esc(title)}</div><div class="right">${right}</div></div></div>`}
+function modal(x){closeM();let d=document.createElement("div");d.id="modal";d.className="modalback";d.innerHTML=`<div class="modal">${x}</div>`;d.onclick=e=>{if(e.target===d)closeM()};document.body.appendChild(d)}
+function closeM(){document.getElementById("modal")?.remove()}
 
-function searchBooks(){modal(`<h2>本を検索</h2><input id="bookSearch" class="search" placeholder="作品タイトル" oninput="runBookSearch()"><div id="searchResults"></div><div class="actions"><button class="secondary" onclick="closeM()">閉じる</button></div>`);runBookSearch()}
-function runBookSearch(){const q=$("#bookSearch")?.value.trim().toLowerCase()||"";const results=data.books.filter(b=>!q||b.title.toLowerCase().includes(q));$("#searchResults").innerHTML=results.map(b=>`<button style="display:block;width:100%;text-align:left;padding:15px 5px;border-bottom:1px solid #eee" onclick="closeM();detail('${b.id}')"><b>${esc(b.title)}</b><div class="meta">${(b.volumes||[]).length}巻 ・ ${bcount(b).toLocaleString()}文字</div></button>`).join("")}
 function shelf(){
- st.book=null;st.vol=null;st.ch=null;
- $("#app").innerHTML=`${top("本棚","","<span style='display:flex;gap:8px'><button class='round' onclick='searchBooks()'>⌕</button><button class='round' onclick='newBook()'>＋</button></span>")}<main class="page">
- <div class="filters"><button class="pill on">本棚</button><button class="pill">未読</button><button class="pill">読書中</button><button class="pill">読了</button></div>
- <div class="grid">${data.books.map(b=>`<div class="book" onclick="detail('${b.id}')">${cover(b)}<div class="bn">${esc(b.title)}</div><div class="meta">${(b.volumes||[]).length}巻　${bcount(b).toLocaleString()}文字</div></div>`).join("")}</div></main>`;
+ let list=data.books.filter(b=>{
+   const q=b.title.toLowerCase().includes(st.search.toLowerCase());
+   const f=st.filter==="all"||b.status===st.filter;
+   return q&&f;
+ });
+ document.getElementById("app").innerHTML=`${top("本棚","","<button class='round' onclick='toggleSearch()'>⌕</button><button class='round' onclick='newBook()'>＋</button>")}
+ <main class="page">
+  <div class="filters">
+   <button class="pill ${st.filter==="all"?"on":""}" onclick="setFilter('all')">本棚</button>
+   <button class="pill ${st.filter==="unread"?"on":""}" onclick="setFilter('unread')">未読</button>
+   <button class="pill ${st.filter==="reading"?"on":""}" onclick="setFilter('reading')">読書中</button>
+   <button class="pill ${st.filter==="done"?"on":""}" onclick="setFilter('done')">読了</button>
+  </div>
+  <input id="searchBox" class="search ${st.search?"":"hidden"}" placeholder="作品を検索" value="${esc(st.search)}" oninput="st.search=this.value;shelf();showSearch()">
+  <div class="sectionrow"><div class="sectiontitle">マイライブラリ</div><div class="small">${list.length}作品</div></div>
+  ${list.length?`<div class="grid">${list.map(b=>`<article class="book" onclick="detail('${b.id}')">${cover(b)}<div class="bn">${esc(b.title)}</div><div class="meta">${b.volumes.length}巻</div></article>`).join("")}</div>`:`<div class="empty">該当する作品がありません</div>`}
+ </main>
+ <div class="bottom"><button onclick="st.filter='all';shelf()"><span class="big">⌂</span>本棚</button><button onclick="newBook()"><span class="big">＋</span>追加</button><button onclick="settings()"><span class="big">⚙</span>設定</button></div>`;
 }
-function detail(bid){
- if(bid)st.book=bid;let b=B();if(!b)return shelf();
- $("#app").innerHTML=`${top(b.title,"shelf()","<button class='secondary' onclick='editBook()'>編集</button>")}<main class="page">
- <div class="detail">${cover(b)}<div><div class="dname">${esc(b.title)}</div><div class="stats">${b.volumes.length}巻<br>総文字数 ${bcount(b).toLocaleString()}文字</div><div class="actions"><button class="primary" onclick="cont()">続きを読む</button><button class="secondary" onclick="addVol()">＋ 巻を追加</button></div></div></div>
- <h2>巻一覧</h2>${b.volumes.map(v=>`<div class="vol"><div class="vh"><span>${esc(v.name)}</span><span>${v.chapters.reduce((a,c)=>a+chars(c.text),0).toLocaleString()}文字</span></div>${v.chapters.map((c,i)=>`<div class="ch" onclick="reader('${v.id}','${c.id}')"><div class="cm"><div class="ct">${esc(c.title||"Chapter "+String(i+1).padStart(2,"0"))}</div><div class="preview">${esc(c.text.slice(0,70))}</div></div><div class="cc">${chars(c.text).toLocaleString()}文字 ›</div></div>`).join("")}<div class="ch"><button class="secondary" onclick="addCh('${v.id}')">＋ チャプター追加</button></div></div>`).join("")}</main>`;
+function setFilter(f){st.filter=f;shelf()}
+function toggleSearch(){const e=document.getElementById("searchBox");if(!e)return;e.classList.toggle("hidden");if(!e.classList.contains("hidden"))e.focus()}
+function showSearch(){setTimeout(()=>{const e=document.getElementById("searchBox");if(e){e.classList.remove("hidden");e.focus();e.setSelectionRange(e.value.length,e.value.length)}},0)}
+
+function detail(id){
+ if(id)st.book=id;
+ const b=B();if(!b){shelf();return}
+ document.getElementById("app").innerHTML=`${top(b.title,"shelf()","<button class='secondary' onclick='editBook()'>編集</button>")}
+ <main class="page">
+  <div class="detail">${cover(b)}<div><div class="dname">${esc(b.title)}</div><div class="stats">${b.volumes.length}巻<br>総文字数 ${bcount(b).toLocaleString()}文字</div>
+   <div class="actions"><button class="primary" onclick="cont()">続きを読む</button><button class="secondary" onclick="addVol()">＋ 巻を追加</button></div>
+  </div></div>
+  <h2>巻・Chapter</h2>
+  ${b.volumes.length?b.volumes.map(v=>`<section class="vol"><div class="vh"><span>${esc(v.name)}</span><span class="vmeta">${v.chapters.length}章・${v.chapters.reduce((a,c)=>a+chars(c.text),0).toLocaleString()}文字</span></div>
+   ${v.chapters.map((c,i)=>`<div class="ch" onclick="reader('${v.id}','${c.id}')"><div class="cm"><div class="ct">${esc(c.title||`Chapter ${String(i+1).padStart(2,"0")}`)}</div><div class="preview">${esc(c.text.slice(0,70))}</div></div><div class="cc">${chars(c.text).toLocaleString()}文字 ›</div></div>`).join("")}
+   <div class="ch"><button class="secondary" onclick="addCh('${v.id}')">＋ Chapterを追加</button></div></section>`).join(""):`<div class="empty">まだ巻がありません<br><br><button class="primary" onclick="addVol()">＋ 第1巻を追加</button></div>`}
+ </main>`;
 }
-function cont(){let b=B(),v=b?.volumes?.[0],c=v?.chapters?.[0];if(c)reader(v.id,c.id)}
+function cont(){const b=B();for(const v of b?.volumes||[]){if(v.chapters[0]){reader(v.id,v.chapters[0].id);return}}alert("Chapterを追加してください")}
+function addVol(){const b=B();if(!b)return;b.volumes.push({id:uid("v"),name:`第${b.volumes.length+1}巻`,chapters:[]});save();detail()}
+function addCh(vid){const v=B()?.volumes.find(x=>x.id===vid);if(!v)return;v.chapters.push({id:uid("c"),title:`Chapter ${String(v.chapters.length+1).padStart(2,"0")}`,text:""});save();detail()}
+
 function reader(vid,cid){
- if(vid)st.vol=vid;if(cid)st.ch=cid;let c=C();if(!c)return detail();
- $("#app").innerHTML=`<div class="reader">${top(c.title||"Chapter","detail()","<button class='secondary' onclick='editCh()'>編集</button>")}<div class="rb"><div id="txt" class="text ${st.vertical?"vert":""}">${esc(c.text)}</div></div><div class="controls"><button class="${!st.vertical?"on":""}" onclick="direction(false)">横書き</button><button class="${st.vertical?"on":""}" onclick="direction(true)">縦書き</button><button onclick="fs(-1)">A−</button><button onclick="fs(1)">A＋</button></div></div>`;
+ if(vid)st.vol=vid;if(cid)st.ch=cid;
+ const c=C();if(!c){detail();return}
+ document.getElementById("app").innerHTML=`<div class="reader">${top(c.title||"Chapter","detail()","<button class='secondary' onclick='editCh()'>編集</button>")}
+ <div class="rb"><div id="txt" class="text ${st.vertical?"vert":""}" style="font-size:${st.font}px">${esc(c.text)}</div></div>
+ <div class="controls"><button class="${!st.vertical?"on":""}" onclick="direction(false)">横書き</button><button class="${st.vertical?"on":""}" onclick="direction(true)">縦書き</button><button onclick="font(-1)">A−</button><button onclick="font(1)">A＋</button></div></div>`;
 }
-function direction(x){st.vertical=x;localStorage.setItem("vertical",x?"1":"0");reader()}
-function fs(d){let e=$("#txt"),n=parseFloat(getComputedStyle(e).fontSize)+d;e.style.fontSize=Math.max(14,Math.min(34,n))+"px"}
-function addVol(){let b=B();b.volumes.push({id:id("v"),name:`第${b.volumes.length+1}巻`,chapters:[]});save();detail()}
-function addCh(vid){let v=B().volumes.find(x=>x.id===vid);v.chapters.push({id:id("c"),title:`Chapter ${String(v.chapters.length+1).padStart(2,"0")}`,text:""});save();detail()}
-function editCh(){let c=C();modal(`<h2>チャプター編集</h2><div class="field"><label>タイトル</label><input id="ect" value="${esc(c.title)}"></div><div class="field"><label>本文（${chars(c.text).toLocaleString()}文字）</label><textarea id="ecx">${esc(c.text)}</textarea></div><div class="actions"><button class="primary" onclick="saveCh()">保存</button><button class="secondary danger" onclick="delCh()">削除</button><button class="secondary" onclick="closeM()">閉じる</button></div>`)}
-function saveCh(){let c=C();c.title=$("#ect").value;c.text=$("#ecx").value;save();closeM();reader()}
-function delCh(){if(!confirm("このチャプターを削除しますか？"))return;let v=V();v.chapters=v.chapters.filter(x=>x.id!==st.ch);v.chapters.forEach((c,i)=>c.title=`Chapter ${String(i+1).padStart(2,"0")}`);save();closeM();detail()}
-function editBook(){let b=B();modal(`<h2>作品設定</h2><div class="field"><label>作品タイトル</label><input id="bt" value="${esc(b.title)}"></div><div class="field"><label>表紙画像URL</label><input id="bc" value="${esc(b.cover||"")}"></div><div class="actions"><button class="primary" onclick="saveBook()">保存</button><button class="secondary danger" onclick="delBook()">作品を削除</button><button class="secondary" onclick="closeM()">閉じる</button></div>`)}
-function saveBook(){let b=B();b.title=$("#bt").value.trim()||b.title;b.cover=$("#bc").value.trim();save();closeM();detail()}
-function delBook(){if(!confirm("作品を削除しますか？"))return;data.books=data.books.filter(x=>x.id!==st.book);save();closeM();shelf()}
-function newBook(){modal(`<h2>本を追加</h2><div class="field"><label>作品タイトル</label><input id="nt" placeholder="作品名"></div><div class="actions"><button class="primary" onclick="createBook()">追加</button><button class="secondary" onclick="closeM()">キャンセル</button></div>`)}
-function createBook(){let t=$("#nt").value.trim()||"新しい小説";data.books.push({id:id("b"),title:t,cover:"",volumes:[]});save();closeM();shelf()}
+function direction(x){st.vertical=x;localStorage.setItem("my-books-vertical",x?"1":"0");reader()}
+function font(d){st.font=Math.max(14,Math.min(34,st.font+d));localStorage.setItem("my-books-font",st.font);const e=document.getElementById("txt");if(e)e.style.fontSize=st.font+"px"}
+
+function editCh(){const c=C();if(!c)return;modal(`<h2>Chapter編集</h2><div class="field"><label>タイトル</label><input id="ect" value="${esc(c.title)}"></div><div class="field"><label>本文（${chars(c.text).toLocaleString()}文字）</label><textarea id="ecx">${esc(c.text)}</textarea></div><div class="actions"><button class="primary" onclick="saveCh()">保存</button><button class="secondary danger" onclick="delCh()">削除</button><button class="secondary" onclick="closeM()">閉じる</button></div>`)}
+function saveCh(){const c=C();if(!c)return;c.title=document.getElementById("ect").value.trim()||c.title;c.text=document.getElementById("ecx").value;save();closeM();reader()}
+function delCh(){if(!confirm("このChapterを削除しますか？"))return;const v=V();if(!v)return;v.chapters=v.chapters.filter(x=>x.id!==st.ch);save();closeM();st.ch=null;detail()}
+
+function editBook(){const b=B();if(!b)return;modal(`<h2>作品編集</h2><div class="field"><label>作品タイトル</label><input id="bt" value="${esc(b.title)}"></div><div class="field"><label>表紙画像URL（任意）</label><input id="bc" value="${esc(b.cover)}" placeholder="https://..."></div><div class="field"><label>読書状態</label><select id="bs"><option value="unread" ${b.status==="unread"?"selected":""}>未読</option><option value="reading" ${b.status==="reading"?"selected":""}>読書中</option><option value="done" ${b.status==="done"?"selected":""}>読了</option></select></div><div class="actions"><button class="primary" onclick="saveBook()">保存</button><button class="secondary danger" onclick="delBook()">作品を削除</button><button class="secondary" onclick="closeM()">閉じる</button></div>`)}
+function saveBook(){const b=B();if(!b)return;b.title=document.getElementById("bt").value.trim()||b.title;b.cover=document.getElementById("bc").value.trim();b.status=document.getElementById("bs").value;save();closeM();detail()}
+function delBook(){if(!confirm("作品を削除しますか？"))return;data.books=data.books.filter(x=>x.id!==st.book);save();closeM();st.book=null;shelf()}
+function newBook(){modal(`<h2>本を追加</h2><div class="field"><label>作品タイトル</label><input id="nt" placeholder="作品名"></div><div class="field"><label>表紙画像URL（任意）</label><input id="nc" placeholder="https://..."></div><div class="actions"><button class="primary" onclick="createBook()">追加</button><button class="secondary" onclick="closeM()">キャンセル</button></div>`)}
+function createBook(){const t=document.getElementById("nt").value.trim()||"新しい小説";data.books.push({id:uid("b"),title:t,cover:document.getElementById("nc").value.trim(),status:"unread",volumes:[]});save();closeM();shelf()}
+
+function settings(){modal(`<h2>設定</h2><div class="field"><label>データ</label><div class="actions"><button class="secondary" onclick="exportData()">バックアップを書き出す</button><button class="secondary" onclick="importData()">バックアップを読み込む</button></div></div><div class="small">作品・巻・Chapter・本文はこのiPhoneのブラウザ内に保存されます。</div><div class="actions"><button class="secondary" onclick="closeM()">閉じる</button></div>`)}
+function exportData(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.download="my-books-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function importData(){const i=document.createElement("input");i.type="file";i.accept=".json,application/json";i.onchange=()=>{const f=i.files&&i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=parseStored(r.result);if(!d)throw new Error();data=d;save();closeM();shelf()}catch(e){alert("バックアップを読み込めませんでした")}};r.readAsText(f)};i.click()}
+
 shelf();
 </script>
 </body>
