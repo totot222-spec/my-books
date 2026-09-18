@@ -20,10 +20,12 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 
 /* top bar */
 .topbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
-.topbar-inner{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;gap:10px}
+.topbar-inner{height:72px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 16px;gap:10px}
+.topbar-inner>.navback{justify-self:start}
+.topbar-inner>.row{justify-self:end}
 .iconbtn{width:42px;height:42px;border-radius:50%;background:#fff;box-shadow:var(--shadow);display:grid;place-items:center;font-size:19px;flex:0 0 auto}
 .iconbtn.small{width:38px;height:38px;font-size:16px}
-.title-center{font-size:19px;font-weight:800}
+.title-center{font-size:19px;font-weight:800;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .navback{font-size:16px;font-weight:700;color:var(--accent);flex:0 0 auto}
 
 .page{max-width:1050px;margin:auto;padding:18px 18px}
@@ -75,7 +77,8 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 .volrow{display:flex;align-items:center;gap:13px;padding:14px 16px;cursor:pointer;border-bottom:1px solid var(--line)}
 .volgroup:last-child .volrow{border-bottom:0}
 .volgroup:last-child .chapter-list:not(.hidden)~.volrow{}
-.volicon{width:42px;height:54px;border-radius:8px;flex:0 0 auto;background:linear-gradient(150deg,#173463,#3d7ce0);display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px;text-align:center;line-height:1.2}
+.volicon{width:42px;height:54px;border-radius:8px;flex:0 0 auto;background:linear-gradient(150deg,#173463,#3d7ce0);display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px;text-align:center;line-height:1.2;overflow:hidden;position:relative}
+.volicon img{width:100%;height:100%;object-fit:cover;display:block}
 .volinfo{flex:1;min-width:0}
 .volinfo b{display:block;font-size:15px;font-weight:750}
 .volinfo span{display:block;font-size:12px;color:var(--muted);margin-top:3px}
@@ -105,6 +108,14 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 .chk input{width:auto;margin-top:3px}
 .repl-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .repl-row input{flex:1}
+.repl-box{background:#fafbfd;border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+.repl-item{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.repl-item:last-of-type{border-bottom:0}
+.repl-item input{flex:1;min-width:0;border:1px solid #ddd;border-radius:9px;padding:8px 10px;background:#fff;font-size:13.5px}
+.repl-arrow{flex:0 0 auto;color:var(--muted);font-size:14px}
+.repl-del{flex:0 0 auto;color:#d33;font-size:16px;padding:2px 6px}
+.repl-empty{font-size:12.5px;color:var(--muted);padding:4px 0 8px}
+.repl-add{width:100%;margin-top:9px;font-size:13px;padding:9px}
 
 /* reader */
 .reader{min-height:100vh;background:var(--paper);color:var(--text)}
@@ -114,15 +125,18 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 .reader[data-theme=sepia] .reader-top{background:rgba(243,233,211,.92)}
 .reader[data-theme=dark] .reader-top{background:rgba(27,30,35,.92);border-color:#333}
 .reader-body{max-width:900px;margin:auto;padding:26px 24px 30px}
-.reader-text{font-family:"Noto Serif KR","Apple SD Gothic Neo","Malgun Gothic","Hiragino Mincho ProN","Yu Mincho",serif;font-size:21px;line-height:2.05;letter-spacing:.02em;white-space:pre-wrap;color:var(--text)}
-.reader-text.vertical{writing-mode:vertical-rl;text-orientation:mixed;line-height:1.9;letter-spacing:.05em;overflow-x:auto;max-width:100%;height:calc(100vh - 230px);white-space:pre-wrap}
+.reader-text{font-family:"Hiragino Mincho ProN","HiraMinProN-W3","Yu Mincho","YuMincho","Noto Serif JP","Noto Serif KR",serif;font-size:21px;line-height:1.75;letter-spacing:.01em;white-space:pre-wrap;color:var(--text)}
+.reader-text.vertical{writing-mode:vertical-rl;text-orientation:mixed;line-height:1.7;letter-spacing:.03em;overflow-x:auto;max-width:100%;height:calc(100vh - 230px);white-space:pre-wrap}
 .progresswrap{max-width:520px;margin:0 auto 110px;padding:0 24px}
 input[type=range].seek{width:100%;accent-color:var(--accent)}
 .seek-label{text-align:center;font-size:12px;color:var(--muted);margin-top:4px}
-.toolbar4{position:fixed;z-index:30;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:20px;padding:8px 4px;display:flex;gap:2px;box-shadow:var(--shadow)}
-.reader[data-theme=dark] .toolbar4{background:rgba(27,30,35,.95);border-color:#333}
-.toolbar4 button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:#667;padding:7px 15px;border-radius:14px;font-weight:600}
-.toolbar4 button .ic{font-size:17px}
+.toolbar4{position:fixed;z-index:30;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.72);backdrop-filter:blur(14px);border:1px solid rgba(0,0,0,.05);border-radius:16px;padding:5px;display:flex;gap:2px;box-shadow:0 3px 12px rgba(31,60,110,.07);opacity:.62;transition:opacity .2s}
+.toolbar4:hover,.toolbar4:focus-within{opacity:1}
+.reader[data-theme=sepia] .toolbar4{background:rgba(243,233,211,.72);border-color:rgba(0,0,0,.06)}
+.reader[data-theme=dark] .toolbar4{background:rgba(27,30,35,.72);border-color:rgba(255,255,255,.08)}
+.toolbar4 button{display:flex;flex-direction:row;align-items:center;gap:5px;font-size:11.5px;color:#7a828f;padding:7px 11px;border-radius:11px;font-weight:600;white-space:nowrap;writing-mode:horizontal-tb}
+.reader[data-theme=dark] .toolbar4 button{color:#9aa3b0}
+.toolbar4 button .ic{font-size:14px;line-height:1}
 .toolbar4 button.active{background:#eaf1fc;color:var(--accent-dark)}
 
 /* modal */
@@ -174,7 +188,7 @@ function normalizeData(d){
     tags:Array.isArray(b.tags)?b.tags:[],
     synopsis:typeof b.synopsis==="string"?b.synopsis:"",
     volumes:Array.isArray(b.volumes)?b.volumes.map((v,j)=>({
-      id:v.id||uid("v"), name:v.name||`第${j+1}巻`,
+      id:v.id||uid("v"), name:v.name||`第${j+1}巻`, cover:v.cover||"",
       chapters:Array.isArray(v.chapters)?v.chapters.map((c,k)=>({
         id:c.id||uid("c"), title:c.title||`Chapter ${String(k+1).padStart(2,"0")}`, text:typeof c.text==="string"?c.text:""
       })):[]
@@ -184,7 +198,7 @@ function normalizeData(d){
   return d;
 }
 data=normalizeData(data);
-let state={screen:"shelf",bookId:null,volumeId:null,chapterId:null,vertical:false,search:"",filter:"all"};
+let state={screen:"shelf",bookId:null,volumeId:null,chapterId:null,vertical:false,search:"",filter:"all",readerScrollRatio:0};
 
 function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
 function uid(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -195,6 +209,36 @@ function count(s){return [...(s||"")].filter(c=>!/\s/.test(c)).length}
 function totalBook(b){return b.volumes.reduce((a,v)=>a+v.chapters.reduce((x,c)=>x+count(c.text),0),0)}
 
 /* ---- translation cleanup tools ---- */
+function fixDuplicateBrackets(text){
+ let out=text;
+ const collapse=(re,rep)=>{ let prev; do{ prev=out; out=out.replace(re,rep); }while(out!==prev); };
+ collapse(/「[ \t　]*「/g,"「");
+ collapse(/」[ \t　]*」/g,"」");
+ collapse(/『[ \t　]*『/g,"『");
+ collapse(/』[ \t　]*』/g,"』");
+ out=out.replace(/["“]{2,}/g,"「").replace(/["”]{2,}/g,"」");
+ return out;
+}
+function normalizeEllipsis(text){
+ return text.replace(/\.{4,}/g,"……").replace(/。{4,}/g,"……").replace(/…{3,}/g,"……");
+}
+function findBracketIssuesFor(text,openCh,closeCh,label){
+ let lines=text.split("\n"); let balance=0; let issues=[];
+ lines.forEach((line,idx)=>{
+  for(const ch of line){
+   if(ch===openCh) balance++;
+   else if(ch===closeCh){
+    balance--;
+    if(balance<0){ issues.push(`${idx+1}行目: 対応する${openCh}のない${closeCh}があります`); balance=0; }
+   }
+  }
+ });
+ if(balance>0) issues.push(`${label}が${balance}個閉じられていません（${closeCh}が見つかりません）`);
+ return issues;
+}
+function findBracketIssues(text){
+ return [...findBracketIssuesFor(text,"「","」","「"),...findBracketIssuesFor(text,"『","』","『")];
+}
 function applyReplacements(text){
  let out=text;
  (data.replacements||[]).forEach(r=>{
@@ -253,17 +297,86 @@ function addSceneBreakSpacing(text){
  while(out.length&&out[out.length-1].trim()==="") out.pop();
  return out.join("\n");
 }
+function replListHTML(){
+ const list=data.replacements||[];
+ if(!list.length) return '<div class="repl-empty">まだ登録されていません。「＋ 語句を追加」から登録してください。</div>';
+ return list.map((r,i)=>`<div class="repl-item">
+  <input value="${esc(r.from)}" placeholder="変換前" onchange="updateReplacement(${i},'from',this.value)">
+  <span class="repl-arrow">→</span>
+  <input value="${esc(r.to)}" placeholder="変換後" onchange="updateReplacement(${i},'to',this.value)">
+  <button class="repl-del" onclick="removeReplacementInline(${i})">✕</button>
+ </div>`).join("");
+}
+function refreshReplList(){
+ const box=document.getElementById("repl-list");
+ if(box) box.innerHTML=replListHTML();
+}
+function addReplacementInline(){
+ data.replacements=data.replacements||[];
+ data.replacements.push({from:"",to:""});
+ save(); refreshReplList();
+}
+function removeReplacementInline(i){
+ data.replacements.splice(i,1); save(); refreshReplList();
+}
+function runReplacements(){
+ const el=document.getElementById("ec-text");
+ if(!el) return;
+ const list=(data.replacements||[]).filter(r=>r.from);
+ if(!list.length){alert("置き換える語句が登録されていません。");return}
+ const scope=document.querySelector('input[name="repl-scope"]:checked')?.value||"chapter";
+ const st=document.getElementById("repl-status");
+ if(scope==="chapter"){
+  const before=el.value;
+  el.value=applyReplacements(before);
+  const lbl=document.getElementById("ec-count");
+  if(lbl) lbl.textContent=count(el.value).toLocaleString()+"文字";
+  let changed=0;
+  list.forEach(r=>{changed+=before.split(r.from).length-1});
+  if(st) st.textContent=changed?`このチャプターで${changed}箇所を置き換えました（保存を押すと確定）`:"該当する語句はありませんでした";
+  return;
+ }
+ const b=book();
+ let total=0,chapters=0;
+ if(!confirm(`「${b.title}」の全チャプターに置き換えを適用します。よろしいですか？`)) return;
+ // 編集中のチャプターは、未保存のテキストエリアの内容を正として扱う
+ const cur=chapter();
+ if(cur) cur.text=el.value;
+ b.volumes.forEach(v=>v.chapters.forEach(c=>{
+  let hits=0;
+  list.forEach(r=>{hits+=c.text.split(r.from).length-1});
+  if(hits){
+   c.text=applyReplacements(c.text);
+   total+=hits; chapters++;
+   if(cur&&c.id===cur.id){
+    el.value=c.text;
+    const lbl=document.getElementById("ec-count");
+    if(lbl) lbl.textContent=count(c.text).toLocaleString()+"文字";
+   }
+  }
+ }));
+ try{save()}catch(e){alert("保存できませんでした。容量が上限に達した可能性があります。")}
+ if(st) st.textContent=total?`${chapters}チャプター・計${total}箇所を置き換え、保存しました`:"該当する語句はありませんでした";
+}
 function runFormatTools(){
  let el=document.getElementById("ec-text");
  if(!el) return;
  let text=el.value;
- if(document.getElementById("ft-replace")?.checked) text=applyReplacements(text);
+ if(document.getElementById("ft-brackets")?.checked) text=fixDuplicateBrackets(text);
+ if(document.getElementById("ft-ellipsis")?.checked) text=normalizeEllipsis(text);
  if(document.getElementById("ft-joinlines")?.checked) text=joinBrokenLines(text);
  if(document.getElementById("ft-dialogue")?.checked) text=insertDialogueBreaks(text);
  if(document.getElementById("ft-scene")?.checked) text=addSceneBreakSpacing(text);
  el.value=text;
  let lbl=document.getElementById("ec-count");
  if(lbl) lbl.textContent=count(text).toLocaleString()+"文字";
+ let fst=document.getElementById("fmt-status");
+ if(fst){
+  const issues=findBracketIssues(text);
+  fst.innerHTML = issues.length
+   ? `⚠️ 鉤括弧の対応が取れていない箇所があります（自動修正はしていません。文脈を見て手動で直してください）<br>`+issues.map(i=>esc(i)).join("<br>")
+   : `鉤括弧の対応は取れています`;
+ }
 }
 function openReplacements(){
  let rows=(data.replacements||[]).map((r,i)=>`<div class="repl-row">
@@ -373,12 +486,12 @@ function renderDetail(){
    ${b.tags.length?`<div class="tags">${b.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}
    <div class="detail-stat">${b.volumes.length}巻・総文字数 ${totalBook(b).toLocaleString()}文字</div>
   </div></div>
-  <button class="primary fullbtn" onclick="continueReading()">📖　続きを読む</button>
+  <button class="primary fullbtn" onclick="continueReading()">続きを読む</button>
   <div class="section-head" style="margin-top:26px"><h2>巻一覧</h2><button class="section-link" onclick="addVolume()">＋ 巻を追加</button></div>
   <div class="volumes-card">
   ${b.volumes.map((v,vi)=>`<div class="volgroup">
    <div class="volrow" onclick="toggleVolume('${v.id}')">
-    <div class="volicon">${vi+1}巻</div>
+    <div class="volicon" onclick="event.stopPropagation();editVolume('${v.id}')">${v.cover?`<img src="${esc(v.cover)}">`:`${vi+1}巻`}</div>
     <div class="volinfo"><b>${esc(v.name)}</b><span>${v.chapters.length} chapters・${v.chapters.reduce((a,c)=>a+count(c.text),0).toLocaleString()}文字</span></div>
     <span class="chev">›</span>
    </div>
@@ -386,9 +499,9 @@ function renderDetail(){
     <div class="chapter-main"><div class="chapter-name">${esc(c.title||`Chapter ${String(ci+1).padStart(2,"0")}`)}</div><div class="chapter-desc">${esc(c.text.slice(0,70))}</div></div>
     <div class="chapter-count">${count(c.text).toLocaleString()}文字　›</div>
    </div>`).join("")}<div class="addrow">
-    <div class="row" style="margin-bottom:8px"><button class="secondary" onclick="event.stopPropagation();addChapter('${v.id}')">＋ チャプター追加</button><button class="secondary" onclick="event.stopPropagation();bulkImport('${v.id}')">📋 貼り付け取込</button></div>
+    <div class="row" style="margin-bottom:8px"><button class="secondary" onclick="event.stopPropagation();addChapter('${v.id}')">＋ チャプター追加</button><button class="secondary" onclick="event.stopPropagation();bulkImport('${v.id}')">貼り付け取込</button></div>
     <input type="file" id="file-${v.id}" class="hidden" accept=".txt,.md,.csv,text/plain" multiple onchange="importTextFiles(this,'${v.id}')">
-    <button class="secondary" style="width:100%" onclick="event.stopPropagation();document.getElementById('file-${v.id}').click()">📄 ファイルから読み込み</button>
+    <button class="secondary" style="width:100%" onclick="event.stopPropagation();document.getElementById('file-${v.id}').click()">ファイルから読み込み</button>
    </div></div>
   </div>`).join("")}
   </div>
@@ -399,7 +512,7 @@ function renderDetail(){
 function toggleVolume(id){let e=document.getElementById("vol-"+id);if(e)e.classList.toggle("hidden")}
 function toggleSynopsis(){let e=document.getElementById("syn");if(!e)return;e.classList.toggle("clamped");let btn=event.currentTarget;btn.textContent=e.classList.contains("clamped")?"もっと見る ▾":"閉じる ▴"}
 function continueReading(){let b=book();if(b.status==="unread"){b.status="reading";save()}let v=b.volumes[0],c=v?.chapters[0];if(c)openChapter(v.id,c.id)}
-function openChapter(vid,cid){state.volumeId=vid;state.chapterId=cid;renderReader()}
+function openChapter(vid,cid){state.volumeId=vid;state.chapterId=cid;state.readerScrollRatio=0;renderReader()}
 function renderReader(){
  const c=chapter(); const v=volume();
  const idx=v.chapters.findIndex(x=>x.id===c.id);
@@ -427,7 +540,7 @@ function renderReader(){
  let savedFont=localStorage.getItem("my-books-font");
  if(savedFont){let t=document.getElementById("readerText");if(t)t.style.fontSize=savedFont+"px"}
 }
-function jumpChapter(val){let v=volume();let idx=parseInt(val,10)-1;let c=v.chapters[idx];if(c){state.chapterId=c.id;renderReader()}}
+function jumpChapter(val){let v=volume();let idx=parseInt(val,10)-1;let c=v.chapters[idx];if(c){state.chapterId=c.id;state.readerScrollRatio=0;renderReader()}}
 function chapterMenu(){
  let v=volume();
  modal(`<h2>${esc(v.name)}・目次</h2>${v.chapters.map((c,i)=>`<div class="chapter" onclick="closeModal();openChapter('${v.id}','${c.id}')">
@@ -450,26 +563,93 @@ function openReaderSettings(){modal(`<h2>読書設定</h2><div class="field"><la
 function editChapter(){
  const c=chapter();
  modal(`<h2>チャプター編集</h2><div class="field"><label>タイトル</label><input id="ec-title" value="${esc(c.title)}"></div>
+ <div class="field"><label>本文　<span id="ec-count">${count(c.text).toLocaleString()}文字</span></label>
+  <div class="row" style="margin-bottom:8px"><button class="secondary" onclick="pasteClipboard('ec-text')">クリップボードから貼り付け</button></div>
+  <textarea id="ec-text">${esc(c.text)}</textarea>
+  <div class="filehint" id="ec-jumphint" style="margin-top:6px"></div>
+ </div>
+ <div class="actions" style="margin-top:2px"><button class="primary" onclick="saveChapterEdit()">保存</button><button class="secondary danger" onclick="deleteChapter()">削除</button><button class="secondary" onclick="closeModal()">キャンセル</button></div>
+ <div class="field" style="margin-top:22px"><label>単語の一括置き換え</label>
+  <div class="repl-box">
+   <div id="repl-list">${replListHTML()}</div>
+   <button class="secondary repl-add" onclick="addReplacementInline()">＋ 語句を追加</button>
+  </div>
+  <div class="fmtopts" style="margin-top:9px">
+   <label class="chk"><input type="radio" name="repl-scope" value="chapter" checked> このチャプターだけ</label>
+   <label class="chk"><input type="radio" name="repl-scope" value="book"> この作品の全チャプター（即座に保存されます）</label>
+  </div>
+  <button class="secondary" onclick="runReplacements()" style="margin-top:9px;width:100%">置き換えを実行</button>
+  <div class="filehint" id="repl-status" style="margin-top:6px">登録した語句は全作品で共通です</div>
+ </div>
  <div class="field"><label>整形ツール</label>
   <div class="fmtopts">
-   <label class="chk"><input type="checkbox" id="ft-replace" checked> 単語の一括置き換え</label>
+   <label class="chk"><input type="checkbox" id="ft-brackets" checked> 重複した鉤括弧を修正（「「→「、間に空白があっても対象）</label>
+   <label class="chk"><input type="checkbox" id="ft-ellipsis" checked> 連続したピリオドを「……」に変換（........→……）</label>
    <label class="chk"><input type="checkbox" id="ft-joinlines" checked> 文末（。！？」など）で終わっていない行を次の行と結合（OCRの改行ズレ修正）</label>
    <label class="chk"><input type="checkbox" id="ft-dialogue" checked> 会話の「」の後で改行（説明・強調の「」は続き言葉を見て除外）</label>
    <label class="chk"><input type="checkbox" id="ft-scene" checked> *** の前後に空白行を入れる</label>
   </div>
-  <button class="secondary" onclick="runFormatTools()" style="margin-top:9px;width:100%">✨ 整形を実行</button>
-  <div class="filehint" style="margin-top:6px">単語リストは 設定 ＞ 単語の一括置き換え で編集できます</div>
+  <button class="secondary" onclick="runFormatTools()" style="margin-top:9px;width:100%">整形を実行</button>
+  <div class="filehint" id="fmt-status" style="margin-top:6px">チェックした項目だけが実行されます</div>
  </div>
- <div class="field"><label>本文　<span id="ec-count">${count(c.text).toLocaleString()}文字</span></label>
-  <div class="row" style="margin-bottom:8px"><button class="secondary" onclick="pasteClipboard('ec-text')">📋 クリップボードから貼り付け</button></div>
-  <textarea id="ec-text">${esc(c.text)}</textarea>
- </div>
- <div class="actions"><button class="primary" onclick="saveChapterEdit()">保存</button><button class="secondary danger" onclick="deleteChapter()">削除</button><button class="secondary" onclick="closeModal()">キャンセル</button></div>`)
+ <div class="actions"><button class="primary" onclick="saveChapterEdit()">保存</button><button class="secondary danger" onclick="deleteChapter()">削除</button><button class="secondary" onclick="closeModal()">キャンセル</button></div>`);
+ jumpTextareaToReadingPosition();
+}
+function jumpTextareaToReadingPosition(){
+ const ta=document.getElementById("ec-text");
+ if(!ta) return;
+ const ratio=typeof state.readerScrollRatio==="number"?state.readerScrollRatio:0;
+ const len=ta.value.length;
+ if(len===0) return;
+ const target=Math.max(0,Math.min(len,Math.round(ratio*len)));
+ const start=Math.max(0,target-18);
+ const end=Math.min(len,target+18);
+ requestAnimationFrame(()=>{
+  ta.focus();
+  try{ ta.setSelectionRange(start,end); }catch(e){}
+  if(ta.scrollHeight>ta.clientHeight){ ta.scrollTop=ratio*(ta.scrollHeight-ta.clientHeight); }
+  const hint=document.getElementById("ec-jumphint");
+  if(hint && ratio>0) hint.textContent="読んでいた位置あたりを選択表示しています";
+ });
 }
 function saveChapterEdit(){let c=chapter();c.title=document.getElementById("ec-title").value;c.text=document.getElementById("ec-text").value;save();closeModal();renderReader()}
 function deleteChapter(){if(!confirm("このチャプターを削除しますか？"))return;let v=volume();v.chapters=v.chapters.filter(c=>c.id!==state.chapterId);v.chapters.forEach((c,i)=>c.title=`Chapter ${String(i+1).padStart(2,"0")}`);save();closeModal();state.chapterId=null;renderDetail()}
 function addChapter(vid){let v=book().volumes.find(x=>x.id===vid);v.chapters.push({id:uid("c"),title:`Chapter ${String(v.chapters.length+1).padStart(2,"0")}`,text:""});save();renderDetail()}
-function addVolume(){let b=book();b.volumes.push({id:uid("v"),name:`第${b.volumes.length+1}巻`,chapters:[]});save();renderDetail()}
+function editVolume(vid){
+ const b=book();
+ const v=b.volumes.find(x=>x.id===vid);
+ if(!v) return;
+ modal(`<h2>巻の編集</h2>
+ <div class="field"><label>巻タイトル</label><input id="ev-title" value="${esc(v.name)}"></div>
+ <div class="field"><label>巻の表紙画像</label>
+  <div class="cover-pick">
+   <div id="ev-cover-preview">${coverHTML({cover:v.cover,title:v.name})}</div>
+   <div class="pickbtns">
+    <input type="file" accept="image/*" id="ev-cover-file" class="hidden" onchange="handleCoverFile(this,'ev')">
+    <button class="secondary" onclick="document.getElementById('ev-cover-file').click()">写真から選択</button>
+    <button class="secondary" onclick="clearCover('ev')">表紙を削除</button>
+    <div class="filehint">画像は自動的に縮小して保存されます</div>
+   </div>
+  </div>
+  <input type="hidden" id="ev-cover" value="${esc(v.cover)}">
+ </div>
+ <div class="actions"><button class="primary" onclick="saveVolumeEdit('${vid}')">保存</button><button class="secondary danger" onclick="deleteVolume('${vid}')">巻を削除</button><button class="secondary" onclick="closeModal()">キャンセル</button></div>`);
+}
+function saveVolumeEdit(vid){
+ const v=book().volumes.find(x=>x.id===vid);
+ if(!v) return;
+ v.name=document.getElementById("ev-title").value.trim()||v.name;
+ v.cover=document.getElementById("ev-cover").value;
+ try{save()}catch(e){alert("保存できませんでした。容量が上限に達した可能性があります。")}
+ closeModal();renderDetail();
+}
+function deleteVolume(vid){
+ if(!confirm("この巻とすべてのチャプターを削除しますか？")) return;
+ const b=book();
+ b.volumes=b.volumes.filter(x=>x.id!==vid);
+ save();closeModal();renderDetail();
+}
+function addVolume(){let b=book();b.volumes.push({id:uid("v"),name:`第${b.volumes.length+1}巻`,cover:"",chapters:[]});save();renderDetail()}
 function importTextFiles(inputEl,vid){
  const files=[...inputEl.files];
  inputEl.value="";
@@ -543,7 +723,7 @@ function bulkImport(vid){
  modal(`<h2>一括インポート</h2>
  <div class="field"><label>章の区切り文字（任意）</label><input id="bi-marker" placeholder="例: 제1장 　※この文字で始まる行で章を分割します"></div>
  <div class="field"><label>OCRテキストを貼り付け</label>
-  <div class="row" style="margin-bottom:8px"><button class="secondary" onclick="pasteClipboard('bi-text')">📋 クリップボードから貼り付け</button></div>
+  <div class="row" style="margin-bottom:8px"><button class="secondary" onclick="pasteClipboard('bi-text')">クリップボードから貼り付け</button></div>
   <textarea id="bi-text" placeholder="複数スクショ分のOCRテキストをまとめてここに貼り付けできます"></textarea>
  </div>
  <div class="small" style="margin-bottom:12px">区切り文字を空欄にすると、貼り付けた内容全体を1つの新しいチャプターとして追加します。</div>
@@ -585,7 +765,7 @@ function editBook(){
    <div id="eb-cover-preview">${coverHTML(b)}</div>
    <div class="pickbtns">
     <input type="file" accept="image/*" id="eb-cover-file" class="hidden" onchange="handleCoverFile(this,'eb')">
-    <button class="secondary" onclick="document.getElementById('eb-cover-file').click()">📷 写真から選択</button>
+    <button class="secondary" onclick="document.getElementById('eb-cover-file').click()">写真から選択</button>
     <button class="secondary" onclick="clearCover('eb')">表紙を削除</button>
     <div class="filehint">画像は自動的に縮小して保存されます</div>
    </div>
@@ -618,7 +798,7 @@ function newBook(){modal(`<h2>本を追加</h2>
    <div id="nb-cover-preview">${coverHTML({cover:"",title:"表紙"})}</div>
    <div class="pickbtns">
     <input type="file" accept="image/*" id="nb-cover-file" class="hidden" onchange="handleCoverFile(this,'nb')">
-    <button class="secondary" onclick="document.getElementById('nb-cover-file').click()">📷 写真から選択</button>
+    <button class="secondary" onclick="document.getElementById('nb-cover-file').click()">写真から選択</button>
     <div class="filehint">画像は自動的に縮小して保存されます</div>
    </div>
   </div>
@@ -631,6 +811,15 @@ function exportData(){let a=document.createElement("a");a.href=URL.createObjectU
 function importData(){let i=document.createElement("input");i.type="file";i.accept=".json";i.onchange=()=>{let f=i.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{data=normalizeData(JSON.parse(r.result));save();closeModal();renderShelf()}catch(e){alert("読み込みに失敗しました")}};r.readAsText(f)};i.click()}
 function modal(html){let d=document.createElement("div");d.id="modal";d.className="modal-back";d.innerHTML=`<div class="modal">${html}</div>`;d.onclick=e=>{if(e.target===d)closeModal()};document.body.appendChild(d)}
 function closeModal(){document.getElementById("modal")?.remove()}
+window.addEventListener("scroll",()=>{
+ const bodyEl=document.querySelector(".reader-body");
+ if(!bodyEl) return;
+ const rect=bodyEl.getBoundingClientRect();
+ const bodyTop=rect.top+window.scrollY;
+ const scrollable=Math.max(1,bodyEl.scrollHeight-window.innerHeight);
+ const scrolledIntoBody=window.scrollY-bodyTop;
+ state.readerScrollRatio=Math.max(0,Math.min(1,scrolledIntoBody/scrollable));
+},{passive:true});
 renderShelf();
 if("serviceWorker"in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
