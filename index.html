@@ -29,13 +29,53 @@ h2{margin-top:28px}.vol{background:#fff;border:1px solid var(--line);border-radi
 <div id="app"></div>
 <script>
 "use strict";
-const KEY="my-books-v11";
+const KEY="my-books-data-v1";
 const sample={books:[
 {id:"b1",title:"サンプル小説",cover:"",volumes:[{id:"v1",name:"第1巻",chapters:[{id:"c1",title:"Chapter 01",text:"「これはサンプルの文章です。」\nジェギョンは静かに窓の外を見た。\n「今日は寒いね。」\n「そうだな。」"}]}]},
 {id:"b2",title:"ホンブル",cover:"",volumes:[{id:"v1",name:"第1巻",chapters:[{id:"c1",title:"Chapter 01",text:"「サンプルの会話文です。」\nここから地の文が続きます。"}]}]}
 ]};
-let data;
-try{data=JSON.parse(localStorage.getItem(KEY))||sample}catch(e){data=sample}
+
+function normalizeBook(b,i){
+  const oldCount=Number(b?.volumes)||0;
+  const vols=Array.isArray(b?.volumes)
+    ? b.volumes.map((v,j)=>({
+        id:v?.id||("v"+Date.now()+i+j),
+        name:v?.name||`第${j+1}巻`,
+        chapters:Array.isArray(v?.chapters)?v.chapters.map((c,k)=>({
+          id:c?.id||("c"+Date.now()+i+j+k),
+          title:c?.title||`Chapter ${String(k+1).padStart(2,"0")}`,
+          text:typeof c?.text==="string"?c.text:""
+        })):[]
+      }))
+    : Array.from({length:oldCount},(_,j)=>({
+        id:"v"+Date.now()+i+j,
+        name:`第${j+1}巻`,
+        chapters:[]
+      }));
+  return {id:b?.id||("b"+Date.now()+i),title:b?.title||`作品${i+1}`,cover:b?.cover||"",volumes:vols};
+}
+
+function loadData(){
+  const keys=[KEY,"my-books-v11","my-books-v1"];
+  for(const key of keys){
+    try{
+      const raw=localStorage.getItem(key);
+      if(!raw) continue;
+      const parsed=JSON.parse(raw);
+      const books=Array.isArray(parsed)?parsed:(Array.isArray(parsed?.books)?parsed.books:null);
+      if(books){
+        const normalized={books:books.map(normalizeBook)};
+        localStorage.setItem(KEY,JSON.stringify(normalized));
+        return normalized;
+      }
+    }catch(e){}
+  }
+  const fresh={books:sample.books.map(normalizeBook)};
+  localStorage.setItem(KEY,JSON.stringify(fresh));
+  return fresh;
+}
+
+let data=loadData();
 let st={book:null,vol:null,ch:null,vertical:localStorage.getItem("vertical")==="1"};
 
 const $=s=>document.querySelector(s);
