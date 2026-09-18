@@ -48,20 +48,22 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 .section-head h2{font-size:18px;font-weight:800;margin:0}
 
 /* book grid */
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 16px}
-@media(max-width:720px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 16px}}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 12px}
+@media(max-width:420px){.grid{gap:18px 8px}}
 .book{cursor:pointer;min-width:0}
 .cover{aspect-ratio:2/3;border-radius:10px;overflow:hidden;background:#eee;box-shadow:var(--shadow);position:relative}
 .cover img{width:100%;height:100%;object-fit:cover;display:block}
 .cover.placeholder{background:linear-gradient(150deg,#173463,#3d7ce0 55%,#8fc1f0);color:white;padding:14px;display:flex;align-items:flex-end}
-.cover.placeholder span{font-family:serif;font-size:19px;line-height:1.35;font-weight:700;white-space:pre-line}
-.book-name{font-size:15.5px;font-weight:750;margin-top:9px;line-height:1.3}
-.book-meta{color:var(--muted);font-size:12.5px;margin-top:3px}
+.cover.placeholder span{font-family:serif;font-size:16px;line-height:1.3;font-weight:700;white-space:pre-line}
+.book-name{font-size:13.5px;font-weight:750;margin-top:8px;line-height:1.3}
+.book-meta{color:var(--muted);font-size:11px;margin-top:2px}
+.book-author{color:var(--muted);font-size:11.5px;margin-top:1px}
 .empty{text-align:center;color:var(--muted);padding:70px 10px}
 
 /* detail */
 .detail-head{display:grid;grid-template-columns:140px 1fr;gap:20px;align-items:start}
 .detail-name{font-size:24px;font-weight:850;margin:2px 0 8px;line-height:1.3}
+.detail-author{color:var(--muted);font-size:14px;margin:-4px 0 8px}
 .detail-stat{color:var(--muted);font-size:13.5px;line-height:1.7}
 .tags{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}
 .tag{background:#eaf1fc;color:var(--accent-dark);font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px}
@@ -86,6 +88,11 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 .chev{color:#c6ccd6;font-size:19px;flex:0 0 auto}
 .chapter-list{border-top:1px solid var(--line);background:#fafbfd}
 .chapter{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);cursor:pointer}
+.chapter-move{display:flex;flex-direction:column;gap:3px;flex:0 0 auto}
+.chapter-move button{width:26px;height:22px;font-size:10px;line-height:1;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.chapter-move button:disabled{opacity:.25}
+.chapter-move button:not(:disabled):active{background:#eaf1fc;color:var(--accent-dark)}
+.chapter-merge{font-size:11.5px;color:var(--accent);font-weight:600;margin-top:5px;display:inline-block}
 .chapter:last-child{border-bottom:0}
 .chapter-main{flex:1;min-width:0}
 .chapter-name{font-weight:700;font-size:14.5px}
@@ -188,6 +195,7 @@ function normalizeData(d){
     status:["unread","reading","done"].includes(b.status)?b.status:"unread",
     tags:Array.isArray(b.tags)?b.tags:[],
     synopsis:typeof b.synopsis==="string"?b.synopsis:"",
+    author:typeof b.author==="string"?b.author:"",
     volumes:Array.isArray(b.volumes)?b.volumes.map((v,j)=>({
       id:v.id||uid("v"), name:v.name||`第${j+1}巻`, cover:v.cover||"",
       chapters:Array.isArray(v.chapters)?v.chapters.map((c,k)=>({
@@ -377,6 +385,32 @@ function runReplacements(){
  try{save()}catch(e){alert("保存できませんでした。容量が上限に達した可能性があります。")}
  if(st) st.textContent=total?`${chapters}チャプター・計${total}箇所を置き換え、保存しました`:"該当する語句はありませんでした";
 }
+function adjustDialogueSpacing(delta){
+ const ta=document.getElementById("ec-text");
+ if(!ta) return;
+ let lines=ta.value.split("\n");
+ let out=[]; let i=0;
+ const isDialogueLine=s=>/^[「『]/.test(s.trim());
+ while(i<lines.length){
+  let line=lines[i];
+  if(isDialogueLine(line)){
+   let blankBefore=0;
+   while(out.length && out[out.length-1].trim()==="") { out.pop(); blankBefore++; }
+   let newBefore=Math.max(0,blankBefore+delta);
+   if(out.length){ for(let k=0;k<newBefore;k++) out.push(""); }
+   out.push(line);
+   let j=i+1,blankAfter=0;
+   while(j<lines.length && lines[j].trim()===""){ blankAfter++; j++; }
+   let hasNext=j<lines.length;
+   let newAfter=Math.max(0,blankAfter+delta);
+   if(hasNext){ for(let k=0;k<newAfter;k++) out.push(""); }
+   i=j;
+  } else { out.push(line); i++; }
+ }
+ ta.value=out.join("\n");
+ const lbl=document.getElementById("ec-count");
+ if(lbl) lbl.textContent=count(ta.value).toLocaleString()+"文字";
+}
 function runFormatTools(){
  let el=document.getElementById("ec-text");
  if(!el) return;
@@ -483,6 +517,7 @@ function renderShelf(){
    <div class="grid">${list.map(b=>`<article class="book" onclick="openBook('${b.id}')">
    ${coverHTML(b)}
    <div class="book-name">${esc(b.title)}</div>
+   ${b.author?`<div class="book-author">${esc(b.author)}</div>`:""}
    <div class="book-meta">${b.volumes.length}巻・${totalBook(b).toLocaleString()}文字</div>
   </article>`).join("")}</div>`:`<div class="empty">本がありません<br><br><button class="primary" onclick="newBook()">＋ 本を追加</button></div>`}
  </main>
@@ -503,6 +538,7 @@ function renderDetail(){
  <main class="page">
   <div class="detail-head">${coverHTML(b)}<div>
    <div class="detail-name">${esc(b.title)}</div>
+   ${b.author?`<div class="detail-author">${esc(b.author)}</div>`:""}
    ${b.tags.length?`<div class="tags">${b.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}
    <div class="detail-stat">${b.volumes.length}巻・総文字数 ${totalBook(b).toLocaleString()}文字</div>
   </div></div>
@@ -516,7 +552,11 @@ function renderDetail(){
     <span class="chev">›</span>
    </div>
    <div id="vol-${v.id}" class="chapter-list">${v.chapters.map((c,ci)=>`<div class="chapter" onclick="openChapter('${v.id}','${c.id}')">
-    <div class="chapter-main"><div class="chapter-name">${esc(c.title||`Chapter ${String(ci+1).padStart(2,"0")}`)}</div><div class="chapter-desc">${esc(c.text.slice(0,70))}</div></div>
+    <div class="chapter-move" onclick="event.stopPropagation()">
+     <button ${ci===0?"disabled":""} onclick="moveChapter('${v.id}','${c.id}',-1)">▲</button>
+     <button ${ci===v.chapters.length-1?"disabled":""} onclick="moveChapter('${v.id}','${c.id}',1)">▼</button>
+    </div>
+    <div class="chapter-main"><div class="chapter-name">${esc(c.title||`Chapter ${String(ci+1).padStart(2,"0")}`)}</div><div class="chapter-desc">${esc(c.text.slice(0,70))}</div>${ci<v.chapters.length-1?`<button class="chapter-merge" onclick="event.stopPropagation();mergeChapterWithNext('${v.id}','${c.id}')">次と結合</button>`:""}</div>
     <div class="chapter-count">${count(c.text).toLocaleString()}文字　›</div>
    </div>`).join("")}<div class="addrow">
     <div class="row" style="margin-bottom:8px"><button class="secondary" onclick="event.stopPropagation();addChapter('${v.id}')">＋ チャプター追加</button><button class="secondary" onclick="event.stopPropagation();bulkImport('${v.id}')">貼り付け取込</button></div>
@@ -589,6 +629,10 @@ function editChapter(){
   <div class="filehint" id="ec-jumphint" style="margin-top:6px"></div>
  </div>
  <div class="actions" style="margin-top:2px"><button class="primary" onclick="saveChapterEdit()">保存</button><button class="secondary danger" onclick="deleteChapter()">削除</button><button class="secondary" onclick="closeModal()">キャンセル</button></div>
+ <div class="field" style="margin-top:22px"><label>会話文（「」）前後の空行</label>
+  <div class="row"><button class="secondary" onclick="adjustDialogueSpacing(1)">空行を増やす</button><button class="secondary" onclick="adjustDialogueSpacing(-1)">空行を減らす</button></div>
+  <div class="filehint" style="margin-top:6px">「または『で始まる行の前後の空行を1行ずつ増減します（押すたびに反映）</div>
+ </div>
  <div class="field" style="margin-top:22px"><label>単語の一括置き換え</label>
   <div class="repl-box">
    <div id="repl-list">${replListHTML()}</div>
@@ -633,7 +677,31 @@ function jumpTextareaToReadingPosition(){
  });
 }
 function saveChapterEdit(){let c=chapter();c.title=document.getElementById("ec-title").value;c.text=document.getElementById("ec-text").value;save();closeModal();renderReader()}
-function deleteChapter(){if(!confirm("このチャプターを削除しますか？"))return;let v=volume();v.chapters=v.chapters.filter(c=>c.id!==state.chapterId);v.chapters.forEach((c,i)=>c.title=`Chapter ${String(i+1).padStart(2,"0")}`);save();closeModal();state.chapterId=null;renderDetail()}
+function deleteChapter(){if(!confirm("このチャプターを削除しますか？"))return;let v=volume();v.chapters=v.chapters.filter(c=>c.id!==state.chapterId);v.chapters.forEach((c,i)=>{ if(/^Chapter \d+$/.test(c.title)) c.title=`Chapter ${String(i+1).padStart(2,"0")}`; });save();closeModal();state.chapterId=null;renderDetail()}
+function mergeChapterWithNext(vid,cid){
+ const v=book().volumes.find(x=>x.id===vid);
+ if(!v) return;
+ const idx=v.chapters.findIndex(c=>c.id===cid);
+ if(idx<0||idx>=v.chapters.length-1) return;
+ const cur=v.chapters[idx], next=v.chapters[idx+1];
+ if(!confirm(`「${cur.title}」と「${next.title}」を結合します。\n（${next.title}の本文は${cur.title}の末尾に追加され、${next.title}は削除されます）`)) return;
+ cur.text = cur.text + (cur.text.trim()&&next.text.trim()?"\n\n":"") + next.text;
+ v.chapters.splice(idx+1,1);
+ try{save()}catch(e){alert("保存できませんでした。容量が上限に達した可能性があります。")}
+ renderDetail();
+}
+function moveChapter(vid,cid,dir){
+ const v=book().volumes.find(x=>x.id===vid);
+ if(!v) return;
+ const idx=v.chapters.findIndex(c=>c.id===cid);
+ const newIdx=idx+dir;
+ if(idx<0||newIdx<0||newIdx>=v.chapters.length) return;
+ const tmp=v.chapters[idx];
+ v.chapters[idx]=v.chapters[newIdx];
+ v.chapters[newIdx]=tmp;
+ save();
+ renderDetail();
+}
 function addChapter(vid){let v=book().volumes.find(x=>x.id===vid);v.chapters.push({id:uid("c"),title:`Chapter ${String(v.chapters.length+1).padStart(2,"0")}`,text:""});save();renderDetail()}
 function editVolume(vid){
  const b=book();
@@ -780,6 +848,7 @@ function editBook(){
  let b=book();
  modal(`<h2>作品編集</h2>
  <div class="field"><label>作品タイトル</label><input id="eb-title" value="${esc(b.title)}"></div>
+ <div class="field"><label>作者</label><input id="eb-author" value="${esc(b.author)}" placeholder="作者名"></div>
  <div class="field"><label>表紙画像</label>
   <div class="cover-pick">
    <div id="eb-cover-preview">${coverHTML(b)}</div>
@@ -804,6 +873,7 @@ function editBook(){
 function saveBookEdit(){
  let b=book();
  b.title=document.getElementById("eb-title").value.trim()||b.title;
+ b.author=document.getElementById("eb-author").value.trim();
  b.cover=document.getElementById("eb-cover").value.trim();
  b.tags=document.getElementById("eb-tags").value.split(",").map(t=>t.trim()).filter(Boolean);
  b.status=document.getElementById("eb-status").value;
@@ -813,6 +883,7 @@ function saveBookEdit(){
 function deleteBook(){if(!confirm("作品を削除しますか？"))return;data.books=data.books.filter(b=>b.id!==state.bookId);save();closeModal();renderShelf()}
 function newBook(){modal(`<h2>本を追加</h2>
  <div class="field"><label>作品タイトル</label><input id="nb-title" placeholder="作品名"></div>
+ <div class="field"><label>作者（任意）</label><input id="nb-author" placeholder="作者名"></div>
  <div class="field"><label>表紙画像（任意）</label>
   <div class="cover-pick">
    <div id="nb-cover-preview">${coverHTML({cover:"",title:"表紙"})}</div>
@@ -825,7 +896,7 @@ function newBook(){modal(`<h2>本を追加</h2>
   <input type="hidden" id="nb-cover" value="">
  </div>
  <button class="primary" onclick="createBook()">追加</button> <button class="secondary" onclick="closeModal()">キャンセル</button>`)}
-function createBook(){let title=document.getElementById("nb-title").value.trim()||"新しい小説";data.books.push({id:uid("b"),title,cover:document.getElementById("nb-cover").value.trim(),status:"unread",tags:[],synopsis:"",volumes:[]});save();closeModal();renderShelf()}
+function createBook(){let title=document.getElementById("nb-title").value.trim()||"新しい小説";data.books.push({id:uid("b"),title,author:document.getElementById("nb-author").value.trim(),cover:document.getElementById("nb-cover").value.trim(),status:"unread",tags:[],synopsis:"",volumes:[]});save();closeModal();renderShelf()}
 function openSettings(){modal(`<h2>設定</h2><div class="field"><label>読書表示</label><div class="small">リーダーでは横書き・縦書き、文字サイズ、背景テーマを切り替えられます。</div></div><div class="field"><label>翻訳整形</label><button class="secondary" onclick="closeModal();openReplacements()">単語の一括置き換えリストを編集</button></div><div class="field"><label>データ</label><button class="secondary" onclick="exportData()">データを書き出す</button> <button class="secondary" onclick="importData()">データを読み込む</button></div><button class="secondary" onclick="closeModal()">閉じる</button>`)}
 function exportData(){let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.download="my-books-backup.json";a.click()}
 function importData(){let i=document.createElement("input");i.type="file";i.accept=".json";i.onchange=()=>{let f=i.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{data=normalizeData(JSON.parse(r.result));save();closeModal();renderShelf()}catch(e){alert("読み込みに失敗しました")}};r.readAsText(f)};i.click()}
