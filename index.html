@@ -132,7 +132,7 @@ function coverHTML(b,cls=""){return b.cover?`<div class="cover ${cls}"><img src=
 function shell(content,reader=false){
  document.getElementById("app").innerHTML=reader?`<div class="reader">${content}</div>`:`<div class="app">${content}</div>`;
 }
-function top(title,left="",right=""){
+function topBar(title,left="",right=""){
  return `<div class="topbar"><div class="topbar-inner">
  <button class="navback" onclick="${left}">${left?'‹ 戻る':''}</button>
  <div class="title-center">${esc(title)}</div>
@@ -142,7 +142,7 @@ function top(title,left="",right=""){
 function renderShelf(){
  let list=data.books.filter(b=>b.title.toLowerCase().includes(state.search.toLowerCase()));
  shell(`
- ${top("本棚","","<button class='iconbtn' onclick='openSearch()'>⌕</button><button class='iconbtn' onclick='newBook()'>＋</button>")}
+ ${topBar("本棚","","<button class='iconbtn' onclick='openSearch()'>⌕</button><button class='iconbtn' onclick='newBook()'>＋</button>")}
  <main class="page">
   <div class="filters"><button class="pill active">本棚</button><button class="pill">未読</button><button class="pill">読書中</button><button class="pill">読了</button></div>
   <input id="searchBox" class="search hidden" placeholder="作品を検索" oninput="state.search=this.value;renderShelf()" value="${esc(state.search)}">
@@ -160,7 +160,7 @@ function openBook(id){state.bookId=id;state.screen="detail";renderDetail()}
 function renderDetail(){
  const b=book();
  shell(`
- ${top(b.title,`renderShelf()`,"<button class='secondary' onclick='editBook()'>編集</button>")}
+ ${topBar(b.title,`renderShelf()`,"<button class='secondary' onclick='editBook()'>編集</button>")}
  <main class="page">
   <div class="detail-head">${coverHTML(b)}<div>
    <div class="detail-name">${esc(b.title)}</div>
@@ -184,7 +184,7 @@ function openChapter(vid,cid){state.volumeId=vid;state.chapterId=cid;renderReade
 function renderReader(){
  const c=chapter(); const v=volume(); const b=book();
  shell(`
- ${top(c.title||"Chapter",`renderDetail()`,`<button class="secondary" onclick="editChapter()">編集</button>`)}
+ ${topBar(c.title||"Chapter",`renderDetail()`,`<button class="secondary" onclick="editChapter()">編集</button>`)}
  <div class="reader-body"><div id="readerText" class="reader-text ${state.vertical?'vertical':''}">${esc(c.text)}</div></div>
  <div class="reader-controls">
   <button class="${!state.vertical?'active':''}" onclick="setDirection(false)">横書き</button>
