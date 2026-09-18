@@ -207,7 +207,7 @@ function normalizeData(d){
   return d;
 }
 data=normalizeData(data);
-let state={screen:"shelf",bookId:null,volumeId:null,chapterId:null,vertical:false,search:"",filter:"all",readerScrollRatio:0};
+let state={screen:"shelf",bookId:null,volumeId:null,chapterId:null,vertical:false,search:"",filter:"all",readerScrollRatio:0,chapterEditMode:false};
 
 function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
 function uid(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -218,6 +218,9 @@ function count(s){return [...(s||"")].filter(c=>!/\s/.test(c)).length}
 function totalBook(b){return b.volumes.reduce((a,v)=>a+v.chapters.reduce((x,c)=>x+count(c.text),0),0)}
 
 /* ---- translation cleanup tools ---- */
+function normalizeBlankLines(text){
+ return text.replace(/\n{3,}/g,"\n\n");
+}
 function fixDuplicateBrackets(text){
  let out=text;
  const collapse=(re,rep)=>{ let prev; do{ prev=out; out=out.replace(re,rep); }while(out!==prev); };
@@ -421,6 +424,7 @@ function runFormatTools(){
  if(document.getElementById("ft-dialogue")?.checked) text=insertDialogueBreaksBefore(text);
  if(document.getElementById("ft-dialogue")?.checked) text=insertDialogueBreaks(text);
  if(document.getElementById("ft-scene")?.checked) text=addSceneBreakSpacing(text);
+ if(document.getElementById("ft-blanklines")?.checked) text=normalizeBlankLines(text);
  el.value=text;
  let lbl=document.getElementById("ec-count");
  if(lbl) lbl.textContent=count(text).toLocaleString()+"文字";
@@ -530,7 +534,8 @@ function renderShelf(){
  `);
 }
 function openSearch(){let e=document.getElementById("searchBox"); if(e){e.classList.toggle("hidden");e.focus()} else {renderShelf();setTimeout(()=>{document.getElementById("searchBox")?.classList.remove("hidden");document.getElementById("searchBox")?.focus()},0)}}
-function openBook(id){state.bookId=id;state.screen="detail";renderDetail()}
+function openBook(id){state.bookId=id;state.screen="detail";state.chapterEditMode=false;renderDetail()}
+function toggleChapterEditMode(){state.chapterEditMode=!state.chapterEditMode;renderDetail()}
 function renderDetail(){
  const b=book();
  shell(`
@@ -543,7 +548,7 @@ function renderDetail(){
    <div class="detail-stat">${b.volumes.length}巻・総文字数 ${totalBook(b).toLocaleString()}文字</div>
   </div></div>
   <button class="primary fullbtn" onclick="continueReading()">続きを読む</button>
-  <div class="section-head" style="margin-top:26px"><h2>巻一覧</h2><button class="section-link" onclick="addVolume()">＋ 巻を追加</button></div>
+  <div class="section-head" style="margin-top:26px"><h2>巻一覧</h2><div class="row" style="flex:0 0 auto;gap:14px"><button class="section-link" onclick="toggleChapterEditMode()">${state.chapterEditMode?"完了":"編集"}</button><button class="section-link" onclick="addVolume()">＋ 巻を追加</button></div></div>
   <div class="volumes-card">
   ${b.volumes.map((v,vi)=>`<div class="volgroup">
    <div class="volrow" onclick="toggleVolume('${v.id}')">
@@ -552,11 +557,11 @@ function renderDetail(){
     <span class="chev">›</span>
    </div>
    <div id="vol-${v.id}" class="chapter-list">${v.chapters.map((c,ci)=>`<div class="chapter" onclick="openChapter('${v.id}','${c.id}')">
-    <div class="chapter-move" onclick="event.stopPropagation()">
+    ${state.chapterEditMode?`<div class="chapter-move" onclick="event.stopPropagation()">
      <button ${ci===0?"disabled":""} onclick="moveChapter('${v.id}','${c.id}',-1)">▲</button>
      <button ${ci===v.chapters.length-1?"disabled":""} onclick="moveChapter('${v.id}','${c.id}',1)">▼</button>
-    </div>
-    <div class="chapter-main"><div class="chapter-name">${esc(c.title||`Chapter ${String(ci+1).padStart(2,"0")}`)}</div><div class="chapter-desc">${esc(c.text.slice(0,70))}</div>${ci<v.chapters.length-1?`<button class="chapter-merge" onclick="event.stopPropagation();mergeChapterWithNext('${v.id}','${c.id}')">次と結合</button>`:""}</div>
+    </div>`:""}
+    <div class="chapter-main"><div class="chapter-name">${esc(c.title||`Chapter ${String(ci+1).padStart(2,"0")}`)}</div><div class="chapter-desc">${esc(c.text.slice(0,70))}</div>${state.chapterEditMode&&ci<v.chapters.length-1?`<button class="chapter-merge" onclick="event.stopPropagation();mergeChapterWithNext('${v.id}','${c.id}')">次と結合</button>`:""}</div>
     <div class="chapter-count">${count(c.text).toLocaleString()}文字　›</div>
    </div>`).join("")}<div class="addrow">
     <div class="row" style="margin-bottom:8px"><button class="secondary" onclick="event.stopPropagation();addChapter('${v.id}')">＋ チャプター追加</button><button class="secondary" onclick="event.stopPropagation();bulkImport('${v.id}')">貼り付け取込</button></div>
@@ -652,6 +657,7 @@ function editChapter(){
    <label class="chk"><input type="checkbox" id="ft-joinlines" checked> 文末（。！？」など）で終わっていない行を次の行と結合（OCRの改行ズレ修正）</label>
    <label class="chk"><input type="checkbox" id="ft-dialogue" checked> 会話文「」・-の前後で改行（文末記号の直後のみ。説明・強調の「」や地の文中の-は除外）</label>
    <label class="chk"><input type="checkbox" id="ft-scene" checked> *** の前後に空白行を入れる</label>
+   <label class="chk"><input type="checkbox" id="ft-blanklines" checked> 段落間の空行を1行に統一（2行以上の空白行を1行にまとめる）</label>
   </div>
   <button class="secondary" onclick="runFormatTools()" style="margin-top:9px;width:100%">整形を実行</button>
   <div class="filehint" id="fmt-status" style="margin-top:6px">チェックした項目だけが実行されます</div>
