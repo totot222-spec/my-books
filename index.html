@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f7fbfe">
 
 <title>My Books</title>
@@ -29,14 +29,20 @@ body{
     sans-serif;
 }
 
-button{
+button,input{
   font:inherit;
+}
+
+button{
   border:0;
   background:none;
   color:inherit;
+  cursor:pointer;
 }
 
-/* ヘッダー */
+/* =========================
+   HEADER
+========================= */
 
 .header{
   height:72px;
@@ -61,7 +67,6 @@ button{
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-
   font-size:20px;
   font-weight:800;
 }
@@ -87,7 +92,9 @@ button{
   box-shadow:0 3px 14px rgba(49,91,116,.08);
 }
 
-/* メイン */
+/* =========================
+   MAIN
+========================= */
 
 .page{
   max-width:900px;
@@ -95,7 +102,9 @@ button{
   padding:22px 18px 100px;
 }
 
-/* フィルター */
+/* =========================
+   FILTER
+========================= */
 
 .filters{
   display:flex;
@@ -122,13 +131,14 @@ button{
   font-weight:700;
 }
 
-/* セクションタイトル */
+/* =========================
+   SECTION
+========================= */
 
 .section-title{
   display:flex;
   align-items:center;
   justify-content:space-between;
-
   margin:8px 0 16px;
 }
 
@@ -143,7 +153,9 @@ button{
   font-weight:700;
 }
 
-/* 本棚 */
+/* =========================
+   BOOKS
+========================= */
 
 .books{
   display:grid;
@@ -191,7 +203,6 @@ button{
 
 .book-title{
   margin-top:9px;
-
   font-size:15px;
   font-weight:750;
 
@@ -202,7 +213,6 @@ button{
 
 .book-meta{
   margin-top:4px;
-
   color:#818994;
   font-size:12px;
 }
@@ -216,6 +226,120 @@ button{
 
 }
 
+/* =========================
+   MODAL
+========================= */
+
+.modal-back{
+  position:fixed;
+  inset:0;
+  z-index:100;
+
+  display:flex;
+  align-items:flex-end;
+
+  background:rgba(0,0,0,.35);
+}
+
+.modal{
+  width:100%;
+  max-height:90vh;
+
+  background:#fff;
+
+  border-radius:25px 25px 0 0;
+
+  padding:
+    22px
+    20px
+    calc(25px + env(safe-area-inset-bottom));
+
+  box-shadow:
+    0 -10px 40px rgba(0,0,0,.08);
+}
+
+.modal-handle{
+  width:38px;
+  height:5px;
+  border-radius:999px;
+  background:#d9dde1;
+  margin:0 auto 20px;
+}
+
+.modal h2{
+  margin:0 0 22px;
+  font-size:22px;
+}
+
+.field{
+  margin-bottom:18px;
+}
+
+.field label{
+  display:block;
+  margin-bottom:8px;
+
+  color:#69727b;
+  font-size:13px;
+  font-weight:700;
+}
+
+.field input{
+  width:100%;
+  height:50px;
+
+  padding:0 14px;
+
+  border:1px solid #dce3e8;
+  border-radius:13px;
+
+  background:#fff;
+  color:#202124;
+
+  outline:none;
+}
+
+.field input:focus{
+  border-color:#1686e8;
+}
+
+.note{
+  margin-top:7px;
+  color:#929aa2;
+  font-size:12px;
+  line-height:1.5;
+}
+
+.modal-actions{
+  display:flex;
+  gap:10px;
+  margin-top:25px;
+}
+
+.primary{
+  flex:1;
+
+  padding:14px 17px;
+
+  border-radius:13px;
+
+  background:#1686e8;
+  color:#fff;
+
+  font-weight:700;
+}
+
+.secondary{
+  padding:14px 17px;
+
+  border:1px solid #dce3e8;
+  border-radius:13px;
+
+  background:#fff;
+
+  font-weight:700;
+}
+
 </style>
 </head>
 
@@ -224,21 +348,89 @@ button{
 <div id="app"></div>
 
 <script>
+"use strict";
 
-const books = [
+/* =========================
+   DATA
+========================= */
+
+const STORAGE_KEY = "my-books-data-v1";
+
+const defaultBooks = [
   {
+    id:"sample1",
     title:"サンプル小説",
     volumes:1
   },
   {
+    id:"sample2",
     title:"ホンブル",
     volumes:1
   },
   {
+    id:"sample3",
     title:"テスト作品",
     volumes:2
   }
 ];
+
+let books = loadBooks();
+
+
+/* =========================
+   LOAD / SAVE
+========================= */
+
+function loadBooks(){
+
+  try{
+
+    const saved =
+      localStorage.getItem(STORAGE_KEY);
+
+    if(saved){
+      return JSON.parse(saved);
+    }
+
+  }catch(error){
+    console.error(error);
+  }
+
+  return defaultBooks;
+}
+
+
+function saveBooks(){
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(books)
+  );
+
+}
+
+
+/* =========================
+   ID
+========================= */
+
+function createId(){
+
+  return (
+    "book-" +
+    Date.now() +
+    "-" +
+    Math.random()
+      .toString(36)
+      .slice(2,7)
+  );
+
+}
+
+
+/* =========================
+   SHELF
+========================= */
 
 function showShelf(){
 
@@ -257,11 +449,16 @@ function showShelf(){
 
       <div class="header-buttons">
 
-        <button class="icon-button">
+        <button
+          class="icon-button"
+          aria-label="検索">
           ⌕
         </button>
 
-        <button class="icon-button">
+        <button
+          class="icon-button"
+          aria-label="本を追加"
+          onclick="openAddBook()">
           ＋
         </button>
 
@@ -310,15 +507,15 @@ function showShelf(){
           <div class="book">
 
             <div class="cover">
-              ${book.title}
+              ${escapeHTML(book.title)}
             </div>
 
             <div class="book-title">
-              ${book.title}
+              ${escapeHTML(book.title)}
             </div>
 
             <div class="book-meta">
-              ${book.volumes}巻
+              ${book.volumes || 0}巻
             </div>
 
           </div>
@@ -330,7 +527,189 @@ function showShelf(){
     </main>
 
   `;
+
 }
+
+
+/* =========================
+   ADD BOOK
+========================= */
+
+function openAddBook(){
+
+  const back =
+    document.createElement("div");
+
+  back.id = "modal";
+  back.className = "modal-back";
+
+  back.innerHTML = `
+
+    <div class="modal">
+
+      <div class="modal-handle"></div>
+
+      <h2>
+        本を追加
+      </h2>
+
+      <div class="field">
+
+        <label>
+          作品タイトル
+        </label>
+
+        <input
+          id="newBookTitle"
+          type="text"
+          placeholder="作品名を入力"
+          autocomplete="off">
+
+      </div>
+
+      <div class="field">
+
+        <label>
+          表紙画像URL
+        </label>
+
+        <input
+          id="newBookCover"
+          type="url"
+          placeholder="今は空欄でもOK">
+
+        <div class="note">
+          表紙画像は次の段階で対応します。
+          今は入力しなくても大丈夫です。
+        </div>
+
+      </div>
+
+      <div class="modal-actions">
+
+        <button
+          class="secondary"
+          onclick="closeModal()">
+          キャンセル
+        </button>
+
+        <button
+          class="primary"
+          onclick="addBook()">
+          追加
+        </button>
+
+      </div>
+
+    </div>
+
+  `;
+
+  back.addEventListener(
+    "click",
+    event => {
+
+      if(event.target === back){
+        closeModal();
+      }
+
+    }
+  );
+
+  document.body.appendChild(back);
+
+  setTimeout(
+    () =>
+      document
+        .getElementById("newBookTitle")
+        ?.focus(),
+    100
+  );
+
+}
+
+
+/* =========================
+   CLOSE MODAL
+========================= */
+
+function closeModal(){
+
+  document
+    .getElementById("modal")
+    ?.remove();
+
+}
+
+
+/* =========================
+   CREATE BOOK
+========================= */
+
+function addBook(){
+
+  const titleInput =
+    document.getElementById(
+      "newBookTitle"
+    );
+
+  const title =
+    titleInput.value.trim();
+
+  if(!title){
+
+    alert(
+      "作品タイトルを入力してください。"
+    );
+
+    return;
+  }
+
+  const book = {
+
+    id:createId(),
+
+    title:title,
+
+    volumes:0
+
+  };
+
+  books.push(book);
+
+  saveBooks();
+
+  closeModal();
+
+  showShelf();
+
+}
+
+
+/* =========================
+   ESCAPE
+========================= */
+
+function escapeHTML(value){
+
+  return String(value ?? "")
+    .replace(
+      /[&<>"']/g,
+      character => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      })[character]
+    );
+
+}
+
+
+/* =========================
+   START
+========================= */
 
 showShelf();
 
