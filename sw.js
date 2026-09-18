@@ -1,15 +1,3 @@
-self.addEventListener("install", () => {
-  self.skipWaiting();
-});
-
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.map(key => caches.delete(key)))
-    ).then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener("fetch", () => {
-  // キャッシュせず、常に最新版を取得
-});
+const CACHE="my-books-v1.0";
+self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(["./","./index.html","./manifest.json"]))));
+self.addEventListener("fetch",e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
