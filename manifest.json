@@ -3,7 +3,7 @@
   "short_name":"My Books",
   "start_url":"./",
   "display":"standalone",
-  "background_color":"#f7f7f5",
-  "theme_color":"#ffffff",
+  "background_color":"#f5f8fc",
+  "theme_color":"#3d7ce0",
   "icons":[]
 }
