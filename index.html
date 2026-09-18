@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f8fcff">
+<meta name="theme-color" content="#eef9fc">
 <title>My Books v1.2</title>
 
 <style>
 :root{
-  --accent:#1686e8;
-  --accent2:#eaf6ff;
-  --bg:#f7fbfe;
-  --paper:#fffefa;
-  --text:#202124;
-  --muted:#818994;
-  --line:#e2eaf0;
-  --card:#ffffff;
+  --accent:#37bfd0;
+  --accent-dark:#159daf;
+  --soft:#e9f8fb;
+  --bg:#f7fafb;
+  --paper:#fff;
+  --text:#222;
+  --muted:#8b9296;
+  --line:#e5e9ea;
 }
 
 *{box-sizing:border-box}
@@ -27,8 +27,8 @@ html,body{
   font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
 }
 
-button,input,textarea,select{font:inherit}
-button{border:0;background:none;color:inherit;cursor:pointer}
+button,input,textarea{font:inherit}
+button{border:0;background:none;color:inherit}
 .hidden{display:none!important}
 
 /* ---------- HEADER ---------- */
@@ -37,181 +37,144 @@ button{border:0;background:none;color:inherit;cursor:pointer}
   position:sticky;
   top:0;
   z-index:20;
-  background:rgba(250,253,255,.96);
+  background:rgba(255,255,255,.97);
   border-bottom:1px solid var(--line);
-  backdrop-filter:blur(16px);
+  backdrop-filter:blur(12px);
 }
 
 .topin{
-  height:72px;
+  min-height:72px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:0 18px;
+  padding:env(safe-area-inset-top) 18px 0;
 }
 
 .ttl{
-  position:absolute;
-  left:50%;
-  transform:translateX(-50%);
   font-size:20px;
-  font-weight:800;
-  white-space:nowrap;
-  max-width:50%;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  font-weight:750;
 }
 
 .back{
+  min-width:70px;
+  text-align:left;
   font-size:16px;
-  color:var(--accent);
-  font-weight:700;
+  color:var(--accent-dark);
+  font-weight:650;
 }
 
-.headright{
+.topright{
+  min-width:70px;
   display:flex;
-  gap:8px;
-  align-items:center;
+  justify-content:flex-end;
 }
 
 .iconbtn{
-  width:43px;
-  height:43px;
+  width:42px;
+  height:42px;
   border-radius:50%;
   background:#fff;
-  box-shadow:0 3px 14px #315b7412;
-  font-size:22px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
-.editbtn{
-  color:var(--accent);
-  font-weight:700;
-  padding:10px;
+  font-size:25px;
 }
 
 /* ---------- COMMON ---------- */
 
 .page{
-  max-width:960px;
+  max-width:850px;
   margin:auto;
-  padding:20px 18px 110px;
-}
-
-.sectiontitle{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin:28px 0 15px;
-}
-
-.sectiontitle h2{
-  margin:0;
-  font-size:20px;
-}
-
-.mini{
-  font-size:13px;
-  color:var(--accent);
-  font-weight:700;
-}
-
-.primary,.secondary,.soft,.dangerbtn{
-  padding:12px 17px;
-  border-radius:13px;
-  font-weight:700;
+  padding:22px 18px 100px;
 }
 
 .primary{
   background:var(--accent);
-  color:white;
+  color:#fff;
+  padding:11px 17px;
+  border-radius:8px;
+  font-weight:700;
 }
 
 .secondary{
-  background:white;
+  background:#fff;
   border:1px solid var(--line);
-}
-
-.soft{
-  background:var(--accent2);
-  color:var(--accent);
-}
-
-.dangerbtn{
-  background:#fff1f1;
-  color:#d94747;
+  padding:10px 15px;
+  border-radius:8px;
+  font-weight:650;
 }
 
 .actions{
   display:flex;
-  gap:8px;
   flex-wrap:wrap;
+  gap:8px;
   margin-top:14px;
 }
 
 /* ---------- SHELF ---------- */
 
-.shelfhead{
+.shelfHead{
   display:flex;
   align-items:center;
   justify-content:space-between;
+  margin-bottom:18px;
+}
+
+.shelfTitle{
+  font-size:14px;
+  font-weight:700;
+  color:#596267;
+}
+
+.addBook{
+  color:var(--accent-dark);
+  font-size:15px;
+  font-weight:700;
 }
 
 .filters{
   display:flex;
-  gap:8px;
+  gap:4px;
   overflow:auto;
-  padding:3px 0 19px;
-  scrollbar-width:none;
+  margin:0 -18px 22px;
+  padding:0 18px 11px;
+  border-bottom:1px solid var(--line);
 }
 
-.filters::-webkit-scrollbar{display:none}
-
 .pill{
-  border:1px solid #dce6ed;
-  background:white;
-  border-radius:999px;
-  padding:9px 17px;
+  border-radius:4px;
+  padding:8px 15px;
   white-space:nowrap;
   font-size:14px;
+  color:#697176;
 }
 
 .pill.on{
-  border-color:var(--accent);
-  color:var(--accent);
-  background:#f5fbff;
-  font-weight:700;
+  background:var(--accent);
+  color:white;
 }
 
 .grid{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:24px 14px;
+  gap:25px 13px;
 }
 
-@media(max-width:390px){
-  .grid{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
+@media(max-width:380px){
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
-@media(min-width:760px){
-  .grid{
-    grid-template-columns:repeat(5,minmax(0,1fr));
-  }
+@media(min-width:700px){
+  .grid{grid-template-columns:repeat(5,minmax(0,1fr))}
 }
 
-.book{cursor:pointer;min-width:0}
+.book{
+  min-width:0;
+  cursor:pointer;
+}
 
 .cover{
   aspect-ratio:2/3;
-  border-radius:7px;
   overflow:hidden;
-  background:
-    linear-gradient(145deg,#9bd5f3,#dff4ff 55%,#83badc);
-  box-shadow:0 7px 20px #41647c20;
+  background:linear-gradient(145deg,#dff3f5,#acdce2);
+  box-shadow:0 3px 9px #0002;
   display:flex;
   align-items:flex-end;
 }
@@ -224,118 +187,110 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 }
 
 .cover span{
-  padding:13px;
-  color:#fff;
-  font-family:"Yu Mincho","Hiragino Mincho ProN",serif;
+  width:100%;
+  padding:11px;
+  color:#234;
+  font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
   font-weight:700;
-  font-size:18px;
-  white-space:pre-line;
-  text-shadow:0 2px 8px #0005;
+  font-size:14px;
+  word-break:break-word;
 }
 
 .bn{
-  font-weight:750;
-  font-size:15px;
-  margin-top:9px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
+  font-size:14px;
+  font-weight:700;
+  margin-top:8px;
+  line-height:1.35;
 }
 
 .meta{
-  font-size:12px;
+  font-size:11px;
   color:var(--muted);
-  margin-top:4px;
+  margin-top:3px;
 }
 
-/* ---------- DETAIL ---------- */
+/* ---------- BOOK DETAIL ---------- */
 
-.detailhero{
-  background:#fff;
-  margin:-20px -18px 0;
-  padding:25px 18px 28px;
+.detailCard{
+  background:white;
   border-bottom:1px solid var(--line);
+  margin:-22px -18px 0;
+  padding:22px 18px;
 }
 
 .detail{
   display:grid;
-  grid-template-columns:120px 1fr;
-  gap:20px;
+  grid-template-columns:105px 1fr;
+  gap:17px;
   align-items:start;
 }
 
 .detail .cover{
-  box-shadow:0 8px 22px #23445a20;
+  width:105px;
 }
 
 .dname{
-  font-size:25px;
-  font-weight:850;
-  margin:2px 0 7px;
-}
-
-.author{
-  color:var(--muted);
-  margin-bottom:13px;
+  font-size:20px;
+  font-weight:800;
+  margin:0 0 5px;
 }
 
 .stats{
   color:var(--muted);
-  font-size:14px;
+  font-size:13px;
   line-height:1.8;
 }
 
-.continue{
-  width:100%;
-  margin-top:19px;
-  background:var(--accent);
-  color:#fff;
-  border-radius:12px;
-  padding:14px;
-  font-weight:750;
-  font-size:16px;
+.sectionTitle{
+  font-size:14px;
+  color:#5c666b;
+  font-weight:700;
+  margin:24px 0 10px;
 }
 
 .vol{
   background:#fff;
-  border:1px solid var(--line);
-  border-radius:16px;
-  overflow:hidden;
-  margin:12px 0;
-  box-shadow:0 2px 10px #315b7408;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  margin-bottom:14px;
 }
 
 .vh{
-  padding:16px 17px;
-  font-size:17px;
-  font-weight:800;
+  padding:14px 4px;
+  font-size:16px;
+  font-weight:750;
   display:flex;
+  align-items:center;
   justify-content:space-between;
-  gap:10px;
 }
 
 .vcount{
+  font-size:11px;
+  font-weight:400;
   color:var(--muted);
-  font-size:12px;
-  font-weight:500;
-  align-self:center;
 }
 
 .ch{
-  padding:15px 17px;
+  padding:14px 5px;
   border-top:1px solid var(--line);
   display:flex;
   gap:10px;
   align-items:center;
 }
 
-.cm{flex:1;min-width:0}
+.cm{
+  flex:1;
+  min-width:0;
+}
 
-.ct{font-weight:700}
+.ct{
+  font-size:15px;
+  font-weight:700;
+}
 
 .preview{
-  font-size:13px;
-  color:#89919a;
+  font-size:12px;
+  color:#8a9194;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -343,169 +298,93 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 }
 
 .cc{
-  font-size:12px;
-  color:#9aa1a8;
+  font-size:11px;
+  color:#9ba0a3;
   white-space:nowrap;
+}
+
+.chevron{
+  color:#aaa;
+  font-size:20px;
 }
 
 /* ---------- READER ---------- */
 
 .reader{
   min-height:100vh;
-  background:var(--paper);
-  --reader-size:20px;
-  --reader-line:2;
-  --reader-pad:26px;
+  background:#fff;
 }
 
-.reader.dark{
-  background:#17191c;
-  color:#eee;
-}
-
-.reader.dark .readtop{
-  background:rgba(23,25,28,.95);
-  border-color:#333;
-}
-
-.reader.dark .readerbar{
-  background:rgba(28,30,33,.96);
-  border-color:#444;
-}
-
-.reader.dark .readerbar button{
-  color:#eee;
-}
-
-.readtop{
-  position:fixed;
-  left:0;
-  right:0;
-  top:0;
-  z-index:30;
-  height:68px;
-  background:rgba(255,254,250,.96);
-  border-bottom:1px solid #eee;
-  backdrop-filter:blur(14px);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 18px;
-  transition:.2s;
-}
-
-.readtop.hidebar{
-  transform:translateY(-110%);
-}
-
-.readtitle{
-  position:absolute;
-  left:50%;
-  transform:translateX(-50%);
-  font-weight:750;
-  font-size:17px;
-  max-width:55%;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-
-.readside{
-  display:flex;
-  gap:5px;
-  align-items:center;
-}
-
-.readerback{
-  font-size:16px;
-  padding:10px 4px;
-}
-
-.readicon{
-  font-size:21px;
-  width:40px;
-  height:40px;
+.reader .top{
+  background:rgba(255,255,255,.97);
 }
 
 .rb{
-  max-width:850px;
+  max-width:760px;
   margin:auto;
-  min-height:100vh;
-  padding:
-    calc(88px + env(safe-area-inset-top))
-    var(--reader-pad)
-    150px;
+  padding:28px 26px 125px;
 }
 
 .text{
-  font-family:"Hiragino Mincho ProN","Yu Mincho","YuMincho",serif;
-  font-size:var(--reader-size);
-  line-height:var(--reader-line);
+  font-family:
+    "Hiragino Mincho ProN",
+    "Yu Mincho",
+    "YuMincho",
+    serif;
+
+  font-size:20px;
+  line-height:2;
   letter-spacing:.035em;
   white-space:pre-wrap;
-  word-break:normal;
-  overflow-wrap:anywhere;
+  overflow-wrap:break-word;
 }
+
+/* 縦書き */
 
 .text.vert{
   writing-mode:vertical-rl;
   text-orientation:mixed;
   height:calc(100vh - 165px);
-  width:max-content;
-  max-width:none;
-  overflow:visible;
-  line-height:var(--reader-line);
-}
-
-.rb.verticalwrap{
-  max-width:none;
+  width:100%;
   overflow-x:auto;
   overflow-y:hidden;
-  padding-left:60px;
-  padding-right:60px;
+  line-height:2;
+  padding:4px 5px;
 }
 
-.readerbar{
+/* ---------- READER CONTROLS ---------- */
+
+.controls{
   position:fixed;
-  z-index:35;
+  z-index:30;
   left:50%;
   bottom:calc(14px + env(safe-area-inset-bottom));
   transform:translateX(-50%);
+
   display:flex;
+  align-items:center;
   gap:3px;
-  padding:6px;
+
   background:rgba(255,255,255,.94);
-  border:1px solid #e0e4e7;
-  border-radius:18px;
-  backdrop-filter:blur(16px);
-  box-shadow:0 5px 25px #00000012;
+  border:1px solid #e1e4e5;
+  border-radius:8px;
+  padding:5px;
+
+  box-shadow:0 3px 14px #00000012;
+  backdrop-filter:blur(12px);
   white-space:nowrap;
-  transition:.2s;
 }
 
-.readerbar.hidebar{
-  transform:translate(-50%,150%);
+.controls button{
+  padding:8px 10px;
+  border-radius:5px;
+  font-size:13px;
 }
 
-.readerbar button{
-  padding:9px 11px;
-  border-radius:11px;
-  font-size:14px;
-}
-
-.readerbar .on{
-  background:var(--accent2);
-  color:var(--accent);
-}
-
-.progress{
-  position:fixed;
-  bottom:0;
-  left:0;
-  height:3px;
-  background:var(--accent);
-  z-index:40;
-  width:0;
+.controls .on{
+  background:var(--soft);
+  color:var(--accent-dark);
+  font-weight:700;
 }
 
 /* ---------- MODAL ---------- */
@@ -513,7 +392,7 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 .modalback{
   position:fixed;
   inset:0;
-  background:#0006;
+  background:#0005;
   z-index:100;
   display:flex;
   align-items:flex-end;
@@ -521,216 +400,132 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 
 .modal{
   width:100%;
-  max-height:91vh;
+  max-height:90vh;
   overflow:auto;
   background:#fff;
-  border-radius:25px 25px 0 0;
+  border-radius:18px 18px 0 0;
   padding:22px 20px calc(25px + env(safe-area-inset-bottom));
 }
 
 .modal h2{
-  margin:5px 0 20px;
+  margin:0 0 20px;
+  font-size:21px;
 }
 
 .field{
-  margin:15px 0;
+  margin:14px 0;
 }
 
 .field label{
   display:block;
-  font-size:13px;
-  color:#69727b;
+  font-size:12px;
+  color:#687176;
   font-weight:700;
-  margin-bottom:7px;
+  margin-bottom:6px;
 }
 
 .field input,
-.field textarea,
-.field select{
+.field textarea{
   width:100%;
-  padding:12px;
-  border:1px solid #dce3e8;
-  border-radius:11px;
+  padding:11px;
+  border:1px solid #dce1e2;
+  border-radius:7px;
   background:#fff;
 }
 
 .field textarea{
-  height:310px;
-  line-height:1.75;
-  resize:vertical;
+  height:330px;
+  line-height:1.8;
 }
 
-.settingrow{
-  padding:15px 0;
-  border-bottom:1px solid #edf0f2;
-}
-
-.settingtitle{
-  font-weight:700;
-  margin-bottom:11px;
-}
-
-.segment{
-  display:flex;
-  background:#f1f4f6;
-  padding:4px;
-  border-radius:12px;
-}
-
-.segment button{
-  flex:1;
-  padding:10px;
-  border-radius:9px;
-}
-
-.segment button.on{
-  background:#fff;
-  color:var(--accent);
-  font-weight:700;
-  box-shadow:0 1px 6px #0001;
-}
-
-.range{
-  width:100%;
-  accent-color:var(--accent);
-}
-
-.toolcard{
-  background:#f6faff;
-  border:1px solid #e0edf6;
-  border-radius:15px;
-  padding:15px;
-  margin:14px 0;
-}
-
-.toolcard h3{
-  margin:0 0 8px;
-  font-size:16px;
-}
-
-.toolcard p{
-  margin:0 0 12px;
-  color:#74808a;
-  font-size:13px;
-  line-height:1.6;
-}
-
-.note{
-  font-size:12px;
-  color:#89929a;
-  line-height:1.6;
+.danger{
+  color:#d33;
 }
 
 </style>
 </head>
 
 <body>
+
 <div id="app"></div>
 
 <script>
 "use strict";
 
-/* =========================================================
-   DATA
-========================================================= */
-
 const KEY="my-books-v11";
-const SETKEY="my-books-reader-v12";
-const POSKEY="my-books-position-v12";
 
 const sample={
-  books:[
+ books:[
+  {
+   id:"b1",
+   title:"サンプル小説",
+   cover:"",
+   volumes:[
     {
-      id:"b1",
-      title:"サンプル小説",
-      cover:"",
-      volumes:[
-        {
-          id:"v1",
-          name:"第1巻",
-          chapters:[
-            {
-              id:"c1",
-              title:"Chapter 01",
-              text:"「これはサンプルの文章です。」\nジェギョンは静かに窓の外を見た。\n「今日は寒いね。」\n「そうだな。」"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id:"b2",
-      title:"ホンブル",
-      cover:"",
-      volumes:[
-        {
-          id:"v1",
-          name:"第1巻",
-          chapters:[
-            {
-              id:"c1",
-              title:"Chapter 01",
-              text:"「サンプルの会話文です。」\nここから地の文が続きます。"
-            }
-          ]
-        }
-      ]
+     id:"v1",
+     name:"第1巻",
+     chapters:[
+      {
+       id:"c1",
+       title:"Chapter 01",
+       text:"「これはサンプルの文章です。」\nジェギョンは静かに窓の外を見た。\n「今日は寒いね。」\n「そうだな。」"
+      }
+     ]
     }
-  ]
+   ]
+  },
+  {
+   id:"b2",
+   title:"ホンブル",
+   cover:"",
+   volumes:[
+    {
+     id:"v1",
+     name:"第1巻",
+     chapters:[
+      {
+       id:"c1",
+       title:"Chapter 01",
+       text:"「サンプルの会話文です。」\nここから地の文が続きます。"
+      }
+     ]
+    }
+   ]
+  }
+ ]
 };
 
 let data;
 
 try{
-  data=JSON.parse(localStorage.getItem(KEY))||sample;
+ data=JSON.parse(localStorage.getItem(KEY))||sample;
 }catch(e){
-  data=sample;
+ data=sample;
 }
 
-let settings={
-  vertical:false,
-  fontSize:20,
-  lineHeight:2,
-  padding:26,
-  dark:false
-};
-
-try{
-  settings={
-    ...settings,
-    ...(JSON.parse(localStorage.getItem(SETKEY))||{})
-  };
-}catch(e){}
-
 let st={
-  book:null,
-  vol:null,
-  ch:null,
-  menu:true
+ book:null,
+ vol:null,
+ ch:null,
+ vertical:localStorage.getItem("vertical")==="1"
 };
 
 const $=s=>document.querySelector(s);
 
 const esc=s=>String(s??"").replace(
-  /[&<>"']/g,
-  m=>({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    "\"":"&quot;",
-    "'":"&#39;"
-  }[m])
+ /[&<>"']/g,
+ m=>({
+  "&":"&amp;",
+  "<":"&lt;",
+  ">":"&gt;",
+  "\"":"&quot;",
+  "'":"&#39;"
+ }[m])
 );
 
 const chars=s=>[...(s||"")].filter(x=>!/\s/.test(x)).length;
 
-const save=()=>{
-  localStorage.setItem(KEY,JSON.stringify(data));
-};
-
-const saveSettings=()=>{
-  localStorage.setItem(SETKEY,JSON.stringify(settings));
-};
+const save=()=>localStorage.setItem(KEY,JSON.stringify(data));
 
 const B=()=>data.books.find(x=>x.id===st.book);
 
@@ -739,1482 +534,680 @@ const V=()=>B()?.volumes.find(x=>x.id===st.vol);
 const C=()=>V()?.chapters.find(x=>x.id===st.ch);
 
 const id=p=>
-  p+
-  Date.now().toString(36)+
-  Math.random().toString(36).slice(2,6);
+ p+
+ Date.now().toString(36)+
+ Math.random().toString(36).slice(2,6);
 
 function bcount(b){
-  return (b.volumes||[]).reduce(
-    (n,v)=>
-      n+
-      (v.chapters||[]).reduce(
-        (a,c)=>a+chars(c.text),
-        0
-      ),
-    0
-  );
+ return (b.volumes||[]).reduce(
+  (n,v)=>n+(v.chapters||[]).reduce(
+   (a,c)=>a+chars(c.text),0
+  ),0
+ );
 }
-
-/* =========================================================
-   COVER
-========================================================= */
 
 function cover(b){
-  if(b.cover){
-    return `
-      <div class="cover">
-        <img src="${esc(b.cover)}" alt="">
-      </div>
-    `;
-  }
 
+ if(b.cover){
   return `
-    <div class="cover">
-      <span>${esc(b.title)}</span>
-    </div>
+   <div class="cover">
+    <img src="${esc(b.cover)}" alt="">
+   </div>
   `;
-}
+ }
 
-/* =========================================================
-   HEADER
-========================================================= */
+ return `
+  <div class="cover">
+   <span>${esc(b.title)}</span>
+  </div>
+ `;
+}
 
 function top(title,back,right=""){
-  return `
-    <div class="top">
-      <div class="topin">
 
-        <button class="back"
-          onclick="${back||""}">
-          ${back?"‹ 戻る":""}
-        </button>
+ return `
+  <div class="top">
+   <div class="topin">
 
-        <div class="ttl">
-          ${esc(title)}
-        </div>
+    <button class="back"
+     onclick="${back||""}">
+     ${back?"‹ 戻る":""}
+    </button>
 
-        <div class="headright">
-          ${right}
-        </div>
-
-      </div>
+    <div class="ttl">
+     ${esc(title)}
     </div>
-  `;
+
+    <div class="topright">
+     ${right}
+    </div>
+
+   </div>
+  </div>
+ `;
 }
 
-/* =========================================================
-   MODAL
-========================================================= */
-
 function modal(x){
-  let d=document.createElement("div");
 
-  d.id="modal";
-  d.className="modalback";
+ let d=document.createElement("div");
 
-  d.innerHTML=`
-    <div class="modal">
-      ${x}
-    </div>
-  `;
+ d.id="modal";
+ d.className="modalback";
 
-  d.onclick=e=>{
-    if(e.target===d)closeM();
-  };
+ d.innerHTML=`
+  <div class="modal">
+   ${x}
+  </div>
+ `;
 
-  document.body.appendChild(d);
+ d.onclick=e=>{
+  if(e.target===d)closeM();
+ };
+
+ document.body.appendChild(d);
 }
 
 function closeM(){
-  $("#modal")?.remove();
+ $("#modal")?.remove();
 }
 
-/* =========================================================
-   SHELF
-========================================================= */
+/* =====================
+   本棚
+===================== */
 
 function shelf(){
 
-  st.book=null;
-  st.vol=null;
-  st.ch=null;
+ $("#app").innerHTML=`
 
-  $("#app").innerHTML=`
+ ${top(
+  "本棚",
+  "",
+  "<button class='iconbtn' onclick='newBook()'>＋</button>"
+ )}
 
-    ${top(
-      "本棚",
-      "",
-      `
-        <button class="iconbtn"
-          onclick="searchBooks()">⌕</button>
+ <main class="page">
 
-        <button class="iconbtn"
-          onclick="newBook()">＋</button>
-      `
-    )}
+  <div class="shelfHead">
+   <div class="shelfTitle">
+    MY BOOKS
+   </div>
 
-    <main class="page">
+   <button class="addBook" onclick="newBook()">
+    ＋ 本を追加
+   </button>
+  </div>
 
-      <div class="filters">
-        <button class="pill on">本棚</button>
-        <button class="pill">未読</button>
-        <button class="pill">読書中</button>
-        <button class="pill">読了</button>
-      </div>
+  <div class="filters">
+   <button class="pill on">本棚</button>
+   <button class="pill">未読</button>
+   <button class="pill">読書中</button>
+   <button class="pill">読了</button>
+  </div>
 
-      <div class="sectiontitle">
-        <h2>マイライブラリ</h2>
-        <span class="mini">
-          ${data.books.length}作品
-        </span>
-      </div>
+  <div class="grid">
 
-      <div class="grid">
+   ${data.books.map(b=>`
 
-        ${data.books.map(b=>`
+    <div class="book"
+     onclick="detail('${b.id}')">
 
-          <div class="book"
-            onclick="detail('${b.id}')">
+     ${cover(b)}
 
-            ${cover(b)}
+     <div class="bn">
+      ${esc(b.title)}
+     </div>
 
-            <div class="bn">
-              ${esc(b.title)}
-            </div>
+     <div class="meta">
+      ${(b.volumes||[]).length}巻
+     </div>
 
-            <div class="meta">
-              ${(b.volumes||[]).length}巻
-            </div>
-
-          </div>
-
-        `).join("")}
-
-      </div>
-
-    </main>
-  `;
-}
-
-/* =========================================================
-   SEARCH
-========================================================= */
-
-function searchBooks(){
-
-  modal(`
-    <h2>本を検索</h2>
-
-    <div class="field">
-      <input
-        id="bookSearch"
-        placeholder="作品タイトル"
-        oninput="runBookSearch()">
     </div>
 
-    <div id="searchResults"></div>
+   `).join("")}
 
-    <div class="actions">
-      <button class="secondary"
-        onclick="closeM()">
-        閉じる
-      </button>
-    </div>
-  `);
+  </div>
 
-  runBookSearch();
+ </main>
+ `;
 }
 
-function runBookSearch(){
-
-  const q=$("#bookSearch")?.value.trim().toLowerCase()||"";
-
-  const results=data.books.filter(
-    b=>!q||b.title.toLowerCase().includes(q)
-  );
-
-  $("#searchResults").innerHTML=
-    results.map(b=>`
-      <button
-        style="
-          display:block;
-          width:100%;
-          text-align:left;
-          padding:15px 5px;
-          border-bottom:1px solid #eee
-        "
-        onclick="
-          closeM();
-          detail('${b.id}')
-        ">
-        <b>${esc(b.title)}</b>
-        <div class="meta">
-          ${b.volumes.length}巻
-          ・
-          ${bcount(b).toLocaleString()}文字
-        </div>
-      </button>
-    `).join("");
-}
-
-/* =========================================================
-   BOOK DETAIL
-========================================================= */
+/* =====================
+   作品詳細
+===================== */
 
 function detail(bid){
 
-  if(bid)st.book=bid;
+ if(bid)st.book=bid;
 
-  let b=B();
+ let b=B();
 
-  if(!b)return shelf();
+ if(!b)return shelf();
 
-  $("#app").innerHTML=`
+ $("#app").innerHTML=`
 
-    ${top(
-      b.title,
-      "shelf()",
-      `
-        <button class="editbtn"
-          onclick="editBook()">
-          編集
-        </button>
-      `
-    )}
+ ${top(
+  b.title,
+  "shelf()",
+  "<button class='secondary' onclick='editBook()'>編集</button>"
+ )}
 
-    <main class="page">
+ <main class="page">
 
-      <div class="detailhero">
+  <div class="detailCard">
 
-        <div class="detail">
+   <div class="detail">
 
-          ${cover(b)}
+    ${cover(b)}
 
-          <div>
+    <div>
 
-            <div class="dname">
-              ${esc(b.title)}
-            </div>
+     <div class="dname">
+      ${esc(b.title)}
+     </div>
 
-            <div class="author">
-              マイライブラリ
-            </div>
+     <div class="stats">
+      ${b.volumes.length}巻
+      <br>
+      ${bcount(b).toLocaleString()}文字
+     </div>
 
-            <div class="stats">
-              ${b.volumes.length}巻
-              <br>
-              ${bcount(b).toLocaleString()}文字
-            </div>
+     <div class="actions">
 
-          </div>
+      <button
+       class="primary"
+       onclick="cont()">
+       読む
+      </button>
 
-        </div>
+      <button
+       class="secondary"
+       onclick="addVol()">
+       ＋ 巻
+      </button>
 
-        <button class="continue"
-          onclick="cont()">
-          ▱　続きを読む
-        </button>
+     </div>
+
+    </div>
+
+   </div>
+
+  </div>
+
+  <div class="sectionTitle">
+   巻一覧
+  </div>
+
+  ${b.volumes.map(v=>`
+
+   <div class="vol">
+
+    <div class="vh">
+
+     <span>
+      ${esc(v.name)}
+     </span>
+
+     <span class="vcount">
+      ${v.chapters.reduce(
+       (a,c)=>a+chars(c.text),0
+      ).toLocaleString()}文字
+     </span>
+
+    </div>
+
+    ${v.chapters.map((c,i)=>`
+
+     <div class="ch"
+      onclick="reader('${v.id}','${c.id}')">
+
+      <div class="cm">
+
+       <div class="ct">
+        ${esc(
+         c.title||
+         "Chapter "+
+         String(i+1).padStart(2,"0")
+        )}
+       </div>
+
+       <div class="preview">
+        ${esc(c.text.slice(0,80))}
+       </div>
 
       </div>
 
-      <div class="sectiontitle">
-
-        <h2>巻一覧</h2>
-
-        <button class="soft"
-          onclick="addVol()">
-          ＋ 巻を追加
-        </button>
-
+      <div class="cc">
+       ${chars(c.text).toLocaleString()}文字
       </div>
 
-      ${b.volumes.map(v=>`
+      <div class="chevron">
+       ›
+      </div>
 
-        <div class="vol">
+     </div>
 
-          <div class="vh">
+    `).join("")}
 
-            <span>${esc(v.name)}</span>
+    <div class="ch">
 
-            <span class="vcount">
-              ${v.chapters.length} chapters
-              ・
-              ${v.chapters.reduce(
-                (a,c)=>a+chars(c.text),
-                0
-              ).toLocaleString()}文字
-            </span>
+     <button
+      class="secondary"
+      onclick="addCh('${v.id}')">
+      ＋ チャプター追加
+     </button>
 
-          </div>
+    </div>
 
-          ${v.chapters.map((c,i)=>`
+   </div>
 
-            <div class="ch"
-              onclick="reader('${v.id}','${c.id}')">
+  `).join("")}
 
-              <div class="cm">
-
-                <div class="ct">
-                  ${esc(
-                    c.title||
-                    "Chapter "+
-                    String(i+1).padStart(2,"0")
-                  )}
-                </div>
-
-                <div class="preview">
-                  ${esc(
-                    c.text
-                      .replace(/\s+/g," ")
-                      .slice(0,75)
-                  )}
-                </div>
-
-              </div>
-
-              <div class="cc">
-                ${chars(c.text).toLocaleString()}文字
-                ›
-              </div>
-
-            </div>
-
-          `).join("")}
-
-          <div class="ch">
-
-            <button class="soft"
-              onclick="addCh('${v.id}')">
-              ＋ チャプター追加
-            </button>
-
-          </div>
-
-        </div>
-
-      `).join("")}
-
-    </main>
-  `;
+ </main>
+ `;
 }
 
-/* =========================================================
-   CONTINUE
-========================================================= */
+/* =====================
+   読書
+===================== */
 
 function cont(){
 
-  let b=B();
+ let b=B();
+ let v=b?.volumes?.[0];
+ let c=v?.chapters?.[0];
 
-  if(!b)return;
-
-  let last=null;
-
-  try{
-    last=JSON.parse(
-      localStorage.getItem(POSKEY)
-    );
-  }catch(e){}
-
-  if(
-    last &&
-    last.book===b.id
-  ){
-
-    const v=b.volumes.find(
-      x=>x.id===last.vol
-    );
-
-    const c=v?.chapters.find(
-      x=>x.id===last.ch
-    );
-
-    if(v&&c){
-      reader(v.id,c.id);
-      return;
-    }
-  }
-
-  let v=b.volumes?.[0];
-  let c=v?.chapters?.[0];
-
-  if(c)reader(v.id,c.id);
+ if(c)reader(v.id,c.id);
 }
-
-/* =========================================================
-   READER
-========================================================= */
 
 function reader(vid,cid){
 
-  if(vid)st.vol=vid;
-  if(cid)st.ch=cid;
+ if(vid)st.vol=vid;
+ if(cid)st.ch=cid;
 
-  let c=C();
+ let c=C();
 
-  if(!c)return detail();
+ if(!c)return detail();
 
-  st.menu=true;
+ $("#app").innerHTML=`
 
-  $("#app").innerHTML=`
+ <div class="reader">
 
-    <div
-      id="readerRoot"
-      class="reader ${settings.dark?"dark":""}"
-      style="
-        --reader-size:${settings.fontSize}px;
-        --reader-line:${settings.lineHeight};
-        --reader-pad:${settings.padding}px;
-      "
-    >
+  ${top(
+   c.title||"Chapter",
+   "detail()",
+   "<button class='secondary' onclick='editCh()'>編集</button>"
+  )}
 
-      <div id="readTop" class="readtop">
+  <div class="rb">
 
-        <button class="readerback"
-          onclick="savePosition();detail()">
-          ‹ 戻る
-        </button>
+   <div
+    id="txt"
+    class="text ${st.vertical?"vert":""}">
+    ${esc(c.text)}
+   </div>
 
-        <div class="readtitle">
-          ${esc(c.title||"Chapter")}
-        </div>
+  </div>
 
-        <div class="readside">
+  <div class="controls">
 
-          <button class="readicon"
-            onclick="editCh()">
-            ✎
-          </button>
+   <button
+    class="${!st.vertical?"on":""}"
+    onclick="direction(false)">
+    横
+   </button>
 
-        </div>
+   <button
+    class="${st.vertical?"on":""}"
+    onclick="direction(true)">
+    縦
+   </button>
 
-      </div>
+   <button onclick="fs(-1)">
+    A−
+   </button>
 
-      <div
-        id="readerScroll"
-        class="rb ${settings.vertical?"verticalwrap":""}"
-        onclick="readerTap(event)"
-      >
+   <button onclick="fs(1)">
+    A＋
+   </button>
 
-        <div
-          id="txt"
-          class="text ${settings.vertical?"vert":""}"
-        >${esc(c.text)}</div>
+  </div>
 
-      </div>
-
-      <div id="readerBar"
-        class="readerbar">
-
-        <button
-          onclick="openReaderSettings()">
-          Aa
-        </button>
-
-        <button
-          class="${!settings.vertical?"on":""}"
-          onclick="setDirection(false)">
-          横
-        </button>
-
-        <button
-          class="${settings.vertical?"on":""}"
-          onclick="setDirection(true)">
-          縦
-        </button>
-
-        <button onclick="changeFont(-1)">
-          A−
-        </button>
-
-        <button onclick="changeFont(1)">
-          A＋
-        </button>
-
-        <button onclick="scrollTopReader()">
-          ↑
-        </button>
-
-      </div>
-
-      <div
-        id="progress"
-        class="progress">
-      </div>
-
-    </div>
-  `;
-
-  requestAnimationFrame(()=>{
-    restorePosition();
-    bindReaderScroll();
-  });
+ </div>
+ `;
 }
 
-/* =========================================================
-   READER MENU
-========================================================= */
+function direction(x){
 
-function readerTap(e){
+ st.vertical=x;
 
-  if(
-    e.target.closest("button") ||
-    e.target.closest(".readerbar")
-  )return;
+ localStorage.setItem(
+  "vertical",
+  x?"1":"0"
+ );
 
-  st.menu=!st.menu;
-
-  $("#readTop")?.classList.toggle(
-    "hidebar",
-    !st.menu
-  );
-
-  $("#readerBar")?.classList.toggle(
-    "hidebar",
-    !st.menu
-  );
+ reader();
 }
 
-/* =========================================================
-   DIRECTION
-========================================================= */
+function fs(d){
 
-function setDirection(vertical){
+ let e=$("#txt");
 
-  savePosition();
+ let n=
+  parseFloat(
+   getComputedStyle(e).fontSize
+  )+d;
 
-  settings.vertical=vertical;
-
-  saveSettings();
-
-  reader();
+ e.style.fontSize=
+  Math.max(
+   14,
+   Math.min(34,n)
+  )+"px";
 }
 
-/* =========================================================
-   FONT
-========================================================= */
-
-function changeFont(delta){
-
-  settings.fontSize=Math.max(
-    14,
-    Math.min(
-      34,
-      settings.fontSize+delta
-    )
-  );
-
-  saveSettings();
-
-  const root=$("#readerRoot");
-
-  if(root){
-    root.style.setProperty(
-      "--reader-size",
-      settings.fontSize+"px"
-    );
-  }
-}
-
-/* =========================================================
-   READER SETTINGS
-========================================================= */
-
-function openReaderSettings(){
-
-  modal(`
-
-    <h2>読書設定</h2>
-
-    <div class="settingrow">
-
-      <div class="settingtitle">
-        表示方向
-      </div>
-
-      <div class="segment">
-
-        <button
-          class="${!settings.vertical?"on":""}"
-          onclick="settings.vertical=false;saveSettings();closeM();reader()">
-          横書き
-        </button>
-
-        <button
-          class="${settings.vertical?"on":""}"
-          onclick="settings.vertical=true;saveSettings();closeM();reader()">
-          縦書き
-        </button>
-
-      </div>
-
-    </div>
-
-    <div class="settingrow">
-
-      <div class="settingtitle">
-        文字サイズ
-        （${settings.fontSize}px）
-      </div>
-
-      <input
-        class="range"
-        type="range"
-        min="14"
-        max="34"
-        value="${settings.fontSize}"
-        oninput="settings.fontSize=Number(this.value)"
-      >
-
-    </div>
-
-    <div class="settingrow">
-
-      <div class="settingtitle">
-        行間
-      </div>
-
-      <input
-        class="range"
-        type="range"
-        min="1.4"
-        max="2.8"
-        step=".1"
-        value="${settings.lineHeight}"
-        oninput="settings.lineHeight=Number(this.value)"
-      >
-
-    </div>
-
-    <div class="settingrow">
-
-      <div class="settingtitle">
-        左右の余白
-      </div>
-
-      <input
-        class="range"
-        type="range"
-        min="14"
-        max="60"
-        value="${settings.padding}"
-        oninput="settings.padding=Number(this.value)"
-      >
-
-    </div>
-
-    <div class="settingrow">
-
-      <div class="settingtitle">
-        背景
-      </div>
-
-      <div class="segment">
-
-        <button
-          class="${!settings.dark?"on":""}"
-          onclick="settings.dark=false">
-          白
-        </button>
-
-        <button
-          class="${settings.dark?"on":""}"
-          onclick="settings.dark=true">
-          黒
-        </button>
-
-      </div>
-
-    </div>
-
-    <div class="actions">
-
-      <button
-        class="primary"
-        onclick="applyReaderSettings()">
-        保存
-      </button>
-
-      <button
-        class="secondary"
-        onclick="closeM()">
-        キャンセル
-      </button>
-
-    </div>
-  `);
-}
-
-function applyReaderSettings(){
-
-  saveSettings();
-
-  closeM();
-
-  reader();
-}
-
-/* =========================================================
-   POSITION
-========================================================= */
-
-function savePosition(){
-
-  if(!st.book||!st.vol||!st.ch)return;
-
-  let el=$("#readerScroll");
-
-  let position=0;
-
-  if(el){
-
-    position=settings.vertical
-      ?Math.abs(el.scrollLeft)
-      :window.scrollY;
-
-  }
-
-  localStorage.setItem(
-    POSKEY,
-    JSON.stringify({
-      book:st.book,
-      vol:st.vol,
-      ch:st.ch,
-      vertical:settings.vertical,
-      position
-    })
-  );
-}
-
-function restorePosition(){
-
-  let p;
-
-  try{
-    p=JSON.parse(
-      localStorage.getItem(POSKEY)
-    );
-  }catch(e){
-    return;
-  }
-
-  if(
-    !p ||
-    p.book!==st.book ||
-    p.vol!==st.vol ||
-    p.ch!==st.ch ||
-    p.vertical!==settings.vertical
-  )return;
-
-  setTimeout(()=>{
-
-    if(settings.vertical){
-
-      const el=$("#readerScroll");
-
-      if(el){
-        el.scrollLeft=-p.position;
-      }
-
-    }else{
-
-      window.scrollTo(
-        0,
-        p.position||0
-      );
-
-    }
-
-  },80);
-}
-
-function bindReaderScroll(){
-
-  const el=$("#readerScroll");
-
-  if(settings.vertical){
-
-    el?.addEventListener(
-      "scroll",
-      ()=>{
-        updateProgress();
-        savePosition();
-      },
-      {passive:true}
-    );
-
-  }else{
-
-    window.onscroll=()=>{
-      updateProgress();
-      savePosition();
-    };
-
-  }
-
-  updateProgress();
-}
-
-function updateProgress(){
-
-  let pct=0;
-
-  if(settings.vertical){
-
-    const el=$("#readerScroll");
-
-    if(el){
-
-      const max=
-        el.scrollWidth-
-        el.clientWidth;
-
-      pct=max>0
-        ?Math.abs(el.scrollLeft)/max*100
-        :0;
-    }
-
-  }else{
-
-    const max=
-      document.documentElement.scrollHeight-
-      window.innerHeight;
-
-    pct=max>0
-      ?window.scrollY/max*100
-      :0;
-  }
-
-  const p=$("#progress");
-
-  if(p){
-    p.style.width=
-      Math.max(
-        0,
-        Math.min(100,pct)
-      )+"%";
-  }
-}
-
-function scrollTopReader(){
-
-  if(settings.vertical){
-
-    const el=$("#readerScroll");
-
-    if(el){
-      el.scrollTo({
-        left:0,
-        behavior:"smooth"
-      });
-    }
-
-  }else{
-
-    window.scrollTo({
-      top:0,
-      behavior:"smooth"
-    });
-
-  }
-}
-
-/* =========================================================
-   ADD VOLUME / CHAPTER
-========================================================= */
+/* =====================
+   巻・章
+===================== */
 
 function addVol(){
 
-  let b=B();
+ let b=B();
 
-  b.volumes.push({
-    id:id("v"),
-    name:`第${b.volumes.length+1}巻`,
-    chapters:[]
-  });
+ b.volumes.push({
+  id:id("v"),
+  name:`第${b.volumes.length+1}巻`,
+  chapters:[]
+ });
 
-  save();
-
-  detail();
+ save();
+ detail();
 }
 
 function addCh(vid){
 
-  let v=B().volumes.find(
-    x=>x.id===vid
-  );
+ let v=B().volumes.find(
+  x=>x.id===vid
+ );
 
-  v.chapters.push({
-    id:id("c"),
-    title:
-      `Chapter ${
-        String(
-          v.chapters.length+1
-        ).padStart(2,"0")
-      }`,
-    text:""
-  });
+ v.chapters.push({
+  id:id("c"),
+  title:
+   `Chapter ${
+    String(
+     v.chapters.length+1
+    ).padStart(2,"0")
+   }`,
+  text:""
+ });
 
-  save();
-
-  detail();
+ save();
+ detail();
 }
 
-/* =========================================================
-   CHAPTER EDIT
-========================================================= */
+/* =====================
+   チャプター編集
+===================== */
 
 function editCh(){
 
-  let c=C();
+ let c=C();
 
-  modal(`
+ modal(`
 
-    <h2>チャプター編集</h2>
+  <h2>
+   チャプター編集
+  </h2>
 
-    <div class="field">
+  <div class="field">
 
-      <label>タイトル</label>
+   <label>
+    タイトル
+   </label>
 
-      <input
-        id="ect"
-        value="${esc(c.title)}">
+   <input
+    id="ect"
+    value="${esc(c.title)}">
 
-    </div>
+  </div>
 
-    <div class="field">
+  <div class="field">
 
-      <label>
-        本文
-        （${chars(c.text).toLocaleString()}文字）
-      </label>
+   <label>
+    本文
+    （${chars(c.text).toLocaleString()}文字）
+   </label>
 
-      <textarea id="ecx">${esc(c.text)}</textarea>
+   <textarea id="ecx">${esc(c.text)}</textarea>
 
-    </div>
+  </div>
 
-    <div class="toolcard">
+  <div class="actions">
 
-      <h3>一括置換</h3>
+   <button
+    class="primary"
+    onclick="saveCh()">
+    保存
+   </button>
 
-      <p>
-        このChapter内だけ、
-        指定した文字をまとめて置き換えます。
-      </p>
+   <button
+    class="secondary danger"
+    onclick="delCh()">
+    削除
+   </button>
 
-      <button class="soft"
-        onclick="replaceTool()">
-        一括置換を開く
-      </button>
+   <button
+    class="secondary"
+    onclick="closeM()">
+    閉じる
+   </button>
 
-    </div>
+  </div>
 
-    <div class="toolcard">
-
-      <h3>会話文を整形</h3>
-
-      <p>
-        独立した会話文を読みやすく改行します。
-        「君」は〜 のような文中引用は、
-        できるだけそのまま残します。
-      </p>
-
-      <button class="soft"
-        onclick="formatCurrentTextarea()">
-        会話文を整形
-      </button>
-
-    </div>
-
-    <div class="actions">
-
-      <button class="primary"
-        onclick="saveCh()">
-        保存
-      </button>
-
-      <button class="dangerbtn"
-        onclick="delCh()">
-        削除
-      </button>
-
-      <button class="secondary"
-        onclick="closeM()">
-        閉じる
-      </button>
-
-    </div>
-
-  `);
+ `);
 }
 
 function saveCh(){
 
-  let c=C();
+ let c=C();
 
-  c.title=$("#ect").value;
+ c.title=$("#ect").value;
+ c.text=$("#ecx").value;
 
-  c.text=normalizeText(
-    $("#ecx").value
-  );
-
-  save();
-
-  closeM();
-
-  reader();
+ save();
+ closeM();
+ reader();
 }
-
-/* =========================================================
-   NORMALIZE
-========================================================= */
-
-function normalizeText(text){
-
-  return String(text||"")
-    .replace(/\r\n?/g,"\n")
-    .replace(/[ \t]+\n/g,"\n")
-    .replace(/\n{3,}/g,"\n\n")
-    .trim();
-}
-
-/* =========================================================
-   DIALOG FORMATTER
-========================================================= */
-
-function formatDialogue(text){
-
-  let s=normalizeText(text);
-
-  /*
-    ① 」「 が連続する会話
-       → 改行
-  */
-
-  s=s.replace(
-    /」[ \t]*「/g,
-    "」\n「"
-  );
-
-  /*
-    ② 」の後ろにすぐ新しい「がある場合
-       → 改行
-
-       例:
-       「A。」 「B。」
-  */
-
-  s=s.replace(
-    /」[ \t]+(?=「)/g,
-    "」\n"
-  );
-
-  /*
-    ③ 行の途中で「が始まる場合。
-
-       ただし
-       「君」は
-       「彼」という
-       のような引用表現を壊さないため、
-       開き括弧の前が句点などの場合だけ処理。
-  */
-
-  s=s.replace(
-    /([。！？!?])[\u3000 \t]+(?=「)/g,
-    "$1\n「"
-  );
-
-  /*
-    ④ 会話文の閉じ括弧の後に
-       地の文が直接続いているケース。
-
-       「こんにちは。」彼は笑った。
-           ↓
-       「こんにちは。」
-       彼は笑った。
-
-       ただし
-       「君」は〜
-       「彼」と〜
-       「好き」という〜
-       のような文中引用は除外。
-  */
-
-  s=s.replace(
-    /(^|\n)(「[^\n「」]{2,}」)[ \t]*(?=([^「\n]))/g,
-    (all,start,quote,next)=>{
-
-      const after=all.slice(
-        start.length+
-        quote.length
-      );
-
-      const following=
-        s.slice(
-          s.indexOf(all)+all.length
-        );
-
-      if(
-        /^[はがをにへとでのもや]/.test(
-          following.trimStart()
-        )
-      ){
-        return all;
-      }
-
-      return start+quote+"\n";
-    }
-  );
-
-  /*
-    ⑤ 空行整理
-  */
-
-  s=s
-    .replace(/\n[ \t]+/g,"\n")
-    .replace(/\n{3,}/g,"\n\n");
-
-  return s.trim();
-}
-
-function formatCurrentTextarea(){
-
-  const ta=$("#ecx");
-
-  if(!ta)return;
-
-  const before=ta.value;
-
-  const after=formatDialogue(before);
-
-  ta.value=after;
-
-  alert("会話文の整形を適用しました。保存する前に本文を確認してください。");
-}
-
-/* =========================================================
-   REPLACE
-========================================================= */
-
-function replaceTool(){
-
-  const current=$("#ecx")?.value||"";
-
-  modalReplace(current);
-}
-
-function modalReplace(current){
-
-  closeM();
-
-  modal(`
-
-    <h2>Chapter 一括置換</h2>
-
-    <div class="field">
-
-      <label>
-        検索する文字
-      </label>
-
-      <input
-        id="findText"
-        placeholder="例：RIDI">
-
-    </div>
-
-    <div class="field">
-
-      <label>
-        置換後の文字
-      </label>
-
-      <input
-        id="replaceText"
-        placeholder="空欄なら削除">
-
-    </div>
-
-    <p class="note">
-      このChapterだけに適用されます。
-      大文字・小文字も区別します。
-    </p>
-
-    <div class="actions">
-
-      <button class="primary"
-        onclick="executeReplace()">
-        置き換える
-      </button>
-
-      <button class="secondary"
-        onclick="closeM();editCh()">
-        戻る
-      </button>
-
-    </div>
-
-  `);
-
-  window.__editBuffer=current;
-}
-
-function executeReplace(){
-
-  const find=$("#findText").value;
-
-  const rep=$("#replaceText").value;
-
-  if(!find){
-    alert("検索する文字を入力してください。");
-    return;
-  }
-
-  const source=
-    window.__editBuffer ??
-    C().text;
-
-  const count=
-    source.split(find).length-1;
-
-  if(count===0){
-    alert("一致する文字がありません。");
-    return;
-  }
-
-  const result=
-    source.split(find).join(rep);
-
-  window.__editBuffer=result;
-
-  closeM();
-
-  editCh();
-
-  $("#ecx").value=result;
-
-  alert(
-    count+
-    "か所を置き換えました。"
-  );
-}
-
-/* =========================================================
-   DELETE CHAPTER
-========================================================= */
 
 function delCh(){
 
-  if(
-    !confirm(
-      "このチャプターを削除しますか？"
-    )
-  )return;
+ if(
+  !confirm(
+   "このチャプターを削除しますか？"
+  )
+ )return;
 
-  let v=V();
+ let v=V();
 
-  v.chapters=
-    v.chapters.filter(
-      x=>x.id!==st.ch
-    );
-
-  v.chapters.forEach(
-    (c,i)=>{
-      if(/^Chapter \d+$/i.test(c.title)){
-        c.title=
-          `Chapter ${
-            String(i+1).padStart(2,"0")
-          }`;
-      }
-    }
+ v.chapters=
+  v.chapters.filter(
+   x=>x.id!==st.ch
   );
 
-  save();
+ v.chapters.forEach(
+  (c,i)=>
+   c.title=
+    `Chapter ${
+     String(i+1).padStart(2,"0")
+    }`
+ );
 
-  closeM();
-
-  detail();
+ save();
+ closeM();
+ detail();
 }
 
-/* =========================================================
-   BOOK EDIT
-========================================================= */
+/* =====================
+   作品編集
+===================== */
 
 function editBook(){
 
-  let b=B();
+ let b=B();
 
-  modal(`
+ modal(`
 
-    <h2>作品設定</h2>
+  <h2>
+   作品設定
+  </h2>
 
-    <div class="field">
+  <div class="field">
 
-      <label>
-        作品タイトル
-      </label>
+   <label>
+    作品タイトル
+   </label>
 
-      <input
-        id="bt"
-        value="${esc(b.title)}">
+   <input
+    id="bt"
+    value="${esc(b.title)}">
 
-    </div>
+  </div>
 
-    <div class="field">
+  <div class="field">
 
-      <label>
-        表紙画像URL
-      </label>
+   <label>
+    表紙画像URL
+   </label>
 
-      <input
-        id="bc"
-        value="${esc(b.cover||"")}">
+   <input
+    id="bc"
+    value="${esc(b.cover||"")}">
 
-    </div>
+  </div>
 
-    <div class="actions">
+  <div class="actions">
 
-      <button class="primary"
-        onclick="saveBook()">
-        保存
-      </button>
+   <button
+    class="primary"
+    onclick="saveBook()">
+    保存
+   </button>
 
-      <button class="dangerbtn"
-        onclick="delBook()">
-        作品を削除
-      </button>
+   <button
+    class="secondary danger"
+    onclick="delBook()">
+    作品を削除
+   </button>
 
-      <button class="secondary"
-        onclick="closeM()">
-        閉じる
-      </button>
+   <button
+    class="secondary"
+    onclick="closeM()">
+    閉じる
+   </button>
 
-    </div>
+  </div>
 
-  `);
+ `);
 }
 
 function saveBook(){
 
-  let b=B();
+ let b=B();
 
-  b.title=
-    $("#bt").value.trim()||
-    b.title;
+ b.title=
+  $("#bt").value.trim()||
+  b.title;
 
-  b.cover=
-    $("#bc").value.trim();
+ b.cover=
+  $("#bc").value.trim();
 
-  save();
-
-  closeM();
-
-  detail();
+ save();
+ closeM();
+ detail();
 }
 
 function delBook(){
 
-  if(
-    !confirm(
-      "作品を削除しますか？"
-    )
-  )return;
+ if(
+  !confirm(
+   "作品を削除しますか？"
+  )
+ )return;
 
-  data.books=
-    data.books.filter(
-      x=>x.id!==st.book
-    );
+ data.books=
+  data.books.filter(
+   x=>x.id!==st.book
+  );
 
-  save();
-
-  closeM();
-
-  shelf();
+ save();
+ closeM();
+ shelf();
 }
 
-/* =========================================================
-   NEW BOOK
-========================================================= */
+/* =====================
+   新規作品
+===================== */
 
 function newBook(){
 
-  modal(`
+ modal(`
 
-    <h2>本を追加</h2>
+  <h2>
+   本を追加
+  </h2>
 
-    <div class="field">
+  <div class="field">
 
-      <label>
-        作品タイトル
-      </label>
+   <label>
+    作品タイトル
+   </label>
 
-      <input
-        id="nt"
-        placeholder="作品名">
+   <input
+    id="nt"
+    placeholder="作品名">
 
-    </div>
+  </div>
 
-    <div class="actions">
+  <div class="actions">
 
-      <button class="primary"
-        onclick="createBook()">
-        追加
-      </button>
+   <button
+    class="primary"
+    onclick="createBook()">
+    追加
+   </button>
 
-      <button class="secondary"
-        onclick="closeM()">
-        キャンセル
-      </button>
+   <button
+    class="secondary"
+    onclick="closeM()">
+    キャンセル
+   </button>
 
-    </div>
+  </div>
 
-  `);
+ `);
 }
 
 function createBook(){
 
-  let t=
-    $("#nt").value.trim()||
-    "新しい小説";
+ let t=
+  $("#nt").value.trim()||
+  "新しい小説";
 
-  data.books.push({
-    id:id("b"),
-    title:t,
-    cover:"",
-    volumes:[]
-  });
+ data.books.push({
+  id:id("b"),
+  title:t,
+  cover:"",
+  volumes:[]
+ });
 
-  save();
-
-  closeM();
-
-  shelf();
+ save();
+ closeM();
+ shelf();
 }
 
-/* =========================================================
-   AUTO SAVE POSITION
-========================================================= */
-
-window.addEventListener(
-  "pagehide",
-  savePosition
-);
-
-document.addEventListener(
-  "visibilitychange",
-  ()=>{
-    if(document.hidden){
-      savePosition();
-    }
-  }
-);
-
-/* =========================================================
-   START
-========================================================= */
+/* 起動 */
 
 shelf();
 
 </script>
+
 </body>
 </html>
