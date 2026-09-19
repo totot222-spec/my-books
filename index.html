@@ -109,11 +109,17 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 .editor{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:12.5px;font-weight:700;color:#666;margin-bottom:7px}
+.field-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;gap:10px}
+.field-head label{margin-bottom:0}
+.texticons{display:flex;gap:16px;flex:0 0 auto}
+.texticons button{font-size:12.5px;font-weight:700;color:var(--accent);white-space:nowrap;padding:2px 0}
 .field input,.field textarea,.field select{width:100%;border:1px solid #ddd;border-radius:12px;padding:11px;background:#fff}
 .field textarea{min-height:200px;line-height:1.8;resize:vertical}
 .fmtopts{display:flex;flex-direction:column;gap:9px;background:#fafbfd;border:1px solid var(--line);border-radius:12px;padding:11px 13px}
-.chk{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#333;line-height:1.5}
-.chk input{width:auto;margin-top:3px}
+.chk{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:#222;line-height:1.4}
+.chk input{width:auto;margin-top:2px;flex:0 0 auto}
+.chk-text{display:block;font-weight:700}
+.chk-sub{display:block;color:var(--muted);font-size:11.5px;font-weight:400;margin-top:2px;line-height:1.4}
 .repl-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .repl-row input{flex:1}
 .repl-box{background:#fafbfd;border:1px solid var(--line);border-radius:12px;padding:11px 13px}
@@ -129,7 +135,8 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 .reader{min-height:100vh;background:var(--paper);color:var(--text)}
 .reader[data-theme=sepia]{--paper:#f3e9d3;--text:#3c2f20}
 .reader[data-theme=dark]{--paper:#1b1e23;--text:#dfe2e7}
-.reader-top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.reader-top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);transition:transform .25s ease}
+.reader-top.reader-top-hidden{transform:translateY(-100%)}
 .reader[data-theme=sepia] .reader-top{background:rgba(243,233,211,.92)}
 .reader[data-theme=dark] .reader-top{background:rgba(27,30,35,.92);border-color:#333}
 .reader-body{max-width:900px;margin:auto;padding:26px 24px 30px}
@@ -497,6 +504,27 @@ async function pasteClipboard(targetId){
   alert("クリップボードを読み取れませんでした。手動で貼り付けてください（長押し→ペースト）。");
  }
 }
+async function copyChapterText(targetId){
+ const el=document.getElementById(targetId);
+ if(!el) return;
+ const text=el.value;
+ if(!text){alert("本文が空です");return}
+ try{
+  await navigator.clipboard.writeText(text);
+  const hint=document.getElementById("ec-jumphint");
+  if(hint) hint.textContent="本文をコピーしました";
+ }catch(e){
+  try{
+   el.focus();
+   el.select();
+   document.execCommand("copy");
+   const hint=document.getElementById("ec-jumphint");
+   if(hint) hint.textContent="本文をコピーしました";
+  }catch(e2){
+   alert("コピーできませんでした。本文を長押しして手動でコピーしてください。");
+  }
+ }
+}
 function shell(content,reader=false){
  document.getElementById("app").innerHTML=reader?`<div class="reader">${content}</div>`:`<div class="app">${content}</div>`;
 }
@@ -583,7 +611,7 @@ function renderReader(){
  const idx=v.chapters.findIndex(x=>x.id===c.id);
  const total=v.chapters.length;
  shell(`
- <div class="reader-top"><div class="topbar-inner">
+ <div class="reader-top" id="readerTop"><div class="topbar-inner">
   <button class="navback" onclick="renderDetail()">‹ 戻る</button>
   <div class="title-center">${esc(c.title||"Chapter")}</div>
   <div class="row" style="flex:0 0 auto"><button class="iconbtn small" onclick="editChapter()">✎</button></div>
@@ -604,7 +632,11 @@ function renderReader(){
  if(readerEl) readerEl.dataset.theme=(localStorage.getItem("my-books-theme")||"light");
  let savedFont=localStorage.getItem("my-books-font");
  if(savedFont){let t=document.getElementById("readerText");if(t)t.style.fontSize=savedFont+"px"}
+ lastScrollY=window.scrollY;
+ const topEl=document.getElementById("readerTop");
+ if(topEl) topEl.classList.remove("reader-top-hidden");
 }
+let lastScrollY=0;
 function jumpChapter(val){let v=volume();let idx=parseInt(val,10)-1;let c=v.chapters[idx];if(c){state.chapterId=c.id;state.readerScrollRatio=0;renderReader()}}
 function chapterMenu(){
  let v=volume();
@@ -628,8 +660,11 @@ function openReaderSettings(){modal(`<h2>読書設定</h2><div class="field"><la
 function editChapter(){
  const c=chapter();
  modal(`<h2>チャプター編集</h2><div class="field"><label>タイトル</label><input id="ec-title" value="${esc(c.title)}"></div>
- <div class="field"><label>本文　<span id="ec-count">${count(c.text).toLocaleString()}文字</span></label>
-  <div class="row" style="margin-bottom:8px"><button class="secondary" onclick="pasteClipboard('ec-text')">クリップボードから貼り付け</button></div>
+ <div class="field">
+  <div class="field-head">
+   <label>本文　<span id="ec-count">${count(c.text).toLocaleString()}文字</span></label>
+   <div class="texticons"><button onclick="copyChapterText('ec-text')">コピー</button><button onclick="pasteClipboard('ec-text')">貼り付け</button></div>
+  </div>
   <textarea id="ec-text">${esc(c.text)}</textarea>
   <div class="filehint" id="ec-jumphint" style="margin-top:6px"></div>
  </div>
@@ -652,12 +687,12 @@ function editChapter(){
  </div>
  <div class="field"><label>整形ツール</label>
   <div class="fmtopts">
-   <label class="chk"><input type="checkbox" id="ft-brackets" checked> 重複した鉤括弧を修正（「「→「、間に空白があっても対象）</label>
-   <label class="chk"><input type="checkbox" id="ft-ellipsis" checked> 連続したピリオドを「……」に変換（........→……）</label>
-   <label class="chk"><input type="checkbox" id="ft-joinlines" checked> 文末（。！？」など）で終わっていない行を次の行と結合（OCRの改行ズレ修正）</label>
-   <label class="chk"><input type="checkbox" id="ft-dialogue" checked> 会話文「」・-の前後で改行（文末記号の直後のみ。説明・強調の「」や地の文中の-は除外）</label>
-   <label class="chk"><input type="checkbox" id="ft-scene" checked> *** の前後に空白行を入れる</label>
-   <label class="chk"><input type="checkbox" id="ft-blanklines" checked> 段落間の空行を1行に統一（2行以上の空白行を1行にまとめる）</label>
+   <label class="chk"><input type="checkbox" id="ft-brackets" checked><span class="chk-text">重複した括弧を修正<span class="chk-sub">「「→「（間に空白があっても対象）</span></span></label>
+   <label class="chk"><input type="checkbox" id="ft-ellipsis" checked><span class="chk-text">三点リーダーを統一<span class="chk-sub">........ → ……</span></span></label>
+   <label class="chk"><input type="checkbox" id="ft-joinlines" checked><span class="chk-text">改行ズレを修正<span class="chk-sub">文末で終わらない行を次の行とつなげる（OCR対策）</span></span></label>
+   <label class="chk"><input type="checkbox" id="ft-dialogue" checked><span class="chk-text">会話文の前後で改行<span class="chk-sub">「」・-のせりふを分ける（説明・強調の括弧は除外）</span></span></label>
+   <label class="chk"><input type="checkbox" id="ft-scene" checked><span class="chk-text">シーン区切りに空行<span class="chk-sub">*** の前後を1行空ける</span></span></label>
+   <label class="chk"><input type="checkbox" id="ft-blanklines" checked><span class="chk-text">空行を1行に統一<span class="chk-sub">2行以上続く空白行をまとめる</span></span></label>
   </div>
   <button class="secondary" onclick="runFormatTools()" style="margin-top:9px;width:100%">整形を実行</button>
   <div class="filehint" id="fmt-status" style="margin-top:6px">チェックした項目だけが実行されます</div>
@@ -916,6 +951,20 @@ window.addEventListener("scroll",()=>{
  const scrollable=Math.max(1,bodyEl.scrollHeight-window.innerHeight);
  const scrolledIntoBody=window.scrollY-bodyTop;
  state.readerScrollRatio=Math.max(0,Math.min(1,scrolledIntoBody/scrollable));
+
+ const topEl=document.getElementById("readerTop");
+ if(topEl){
+  const cur=window.scrollY;
+  const delta=cur-lastScrollY;
+  if(cur<=8){
+   topEl.classList.remove("reader-top-hidden");
+  } else if(delta>4){
+   topEl.classList.add("reader-top-hidden");
+  } else if(delta<-4){
+   topEl.classList.remove("reader-top-hidden");
+  }
+  lastScrollY=cur;
+ }
 },{passive:true});
 renderShelf();
 if("serviceWorker"in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
