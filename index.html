@@ -203,6 +203,7 @@ function normalizeData(d){
     tags:Array.isArray(b.tags)?b.tags:[],
     synopsis:typeof b.synopsis==="string"?b.synopsis:"",
     author:typeof b.author==="string"?b.author:"",
+    lastRead:(b.lastRead&&typeof b.lastRead==="object"&&typeof b.lastRead.volumeId==="string"&&typeof b.lastRead.chapterId==="string")?{volumeId:b.lastRead.volumeId,chapterId:b.lastRead.chapterId,scrollRatio:typeof b.lastRead.scrollRatio==="number"?b.lastRead.scrollRatio:0}:null,
     volumes:Array.isArray(b.volumes)?b.volumes.map((v,j)=>({
       id:v.id||uid("v"), name:v.name||`第${j+1}巻`, cover:v.cover||"",
       chapters:Array.isArray(v.chapters)?v.chapters.map((c,k)=>({
@@ -576,6 +577,7 @@ function renderDetail(){
    <div class="detail-stat">${b.volumes.length}巻・総文字数 ${totalBook(b).toLocaleString()}文字</div>
   </div></div>
   <button class="primary fullbtn" onclick="continueReading()">続きを読む</button>
+  ${b.lastRead&&b.volumes.find(v=>v.id===b.lastRead.volumeId)?.chapters.find(c=>c.id===b.lastRead.chapterId)?`<div class="filehint" style="text-align:center;margin-top:8px">前回の続きから再開します：${esc((()=>{const v=b.volumes.find(v=>v.id===b.lastRead.volumeId);const c=v.chapters.find(c=>c.id===b.lastRead.chapterId);return `${v.name}・${c.title||"Chapter"}`})())}</div>`:""}
   <div class="section-head" style="margin-top:26px"><h2>巻一覧</h2><div class="row" style="flex:0 0 auto;gap:14px"><button class="section-link" onclick="toggleChapterEditMode()">${state.chapterEditMode?"完了":"編集"}</button><button class="section-link" onclick="addVolume()">＋ 巻を追加</button></div></div>
   <div class="volumes-card">
   ${b.volumes.map((v,vi)=>`<div class="volgroup">
@@ -604,9 +606,32 @@ function renderDetail(){
 }
 function toggleVolume(id){let e=document.getElementById("vol-"+id);if(e)e.classList.toggle("hidden")}
 function toggleSynopsis(){let e=document.getElementById("syn");if(!e)return;e.classList.toggle("clamped");let btn=event.currentTarget;btn.textContent=e.classList.contains("clamped")?"もっと見る ▾":"閉じる ▴"}
-function continueReading(){let b=book();if(b.status==="unread"){b.status="reading";save()}let v=b.volumes[0],c=v?.chapters[0];if(c)openChapter(v.id,c.id)}
-function openChapter(vid,cid){state.volumeId=vid;state.chapterId=cid;state.readerScrollRatio=0;renderReader()}
-function renderReader(){
+function continueReading(){
+ let b=book();
+ if(b.status==="unread"){b.status="reading";save()}
+ let v,c,ratio=0;
+ if(b.lastRead){
+  v=b.volumes.find(x=>x.id===b.lastRead.volumeId);
+  c=v?.chapters.find(x=>x.id===b.lastRead.chapterId);
+  ratio=b.lastRead.scrollRatio||0;
+ }
+ if(!c){ v=b.volumes[0]; c=v?.chapters[0]; ratio=0; }
+ if(c) openChapter(v.id,c.id,ratio);
+}
+function openChapter(vid,cid,initialRatio){
+ state.volumeId=vid;state.chapterId=cid;state.readerScrollRatio=typeof initialRatio==="number"?initialRatio:0;
+ recordProgress(state.readerScrollRatio);
+ renderReader(state.readerScrollRatio);
+}
+let progressSaveTimer=null;
+function recordProgress(ratio){
+ const b=book();
+ if(!b||!state.volumeId||!state.chapterId) return;
+ b.lastRead={volumeId:state.volumeId,chapterId:state.chapterId,scrollRatio:typeof ratio==="number"?ratio:(state.readerScrollRatio||0)};
+ clearTimeout(progressSaveTimer);
+ progressSaveTimer=setTimeout(()=>{ try{save()}catch(e){} },400);
+}
+function renderReader(resumeRatio){
  const c=chapter(); const v=volume();
  const idx=v.chapters.findIndex(x=>x.id===c.id);
  const total=v.chapters.length;
@@ -632,12 +657,25 @@ function renderReader(){
  if(readerEl) readerEl.dataset.theme=(localStorage.getItem("my-books-theme")||"light");
  let savedFont=localStorage.getItem("my-books-font");
  if(savedFont){let t=document.getElementById("readerText");if(t)t.style.fontSize=savedFont+"px"}
- lastScrollY=window.scrollY;
  const topEl=document.getElementById("readerTop");
  if(topEl) topEl.classList.remove("reader-top-hidden");
+ if(typeof resumeRatio==="number"&&resumeRatio>0){
+  requestAnimationFrame(()=>{
+   const bodyEl=document.querySelector(".reader-body");
+   if(bodyEl){
+    const rect=bodyEl.getBoundingClientRect();
+    const bodyTop=rect.top+window.scrollY;
+    const scrollable=Math.max(1,bodyEl.scrollHeight-window.innerHeight);
+    window.scrollTo(0,bodyTop+resumeRatio*scrollable);
+   }
+   lastScrollY=window.scrollY;
+  });
+ } else {
+  lastScrollY=window.scrollY;
+ }
 }
 let lastScrollY=0;
-function jumpChapter(val){let v=volume();let idx=parseInt(val,10)-1;let c=v.chapters[idx];if(c){state.chapterId=c.id;state.readerScrollRatio=0;renderReader()}}
+function jumpChapter(val){let v=volume();let idx=parseInt(val,10)-1;let c=v.chapters[idx];if(c){state.chapterId=c.id;state.readerScrollRatio=0;recordProgress(0);renderReader()}}
 function chapterMenu(){
  let v=volume();
  modal(`<h2>${esc(v.name)}・目次</h2>${v.chapters.map((c,i)=>`<div class="chapter" onclick="closeModal();openChapter('${v.id}','${c.id}')">
@@ -951,6 +989,7 @@ window.addEventListener("scroll",()=>{
  const scrollable=Math.max(1,bodyEl.scrollHeight-window.innerHeight);
  const scrolledIntoBody=window.scrollY-bodyTop;
  state.readerScrollRatio=Math.max(0,Math.min(1,scrolledIntoBody/scrollable));
+ recordProgress(state.readerScrollRatio);
 
  const topEl=document.getElementById("readerTop");
  if(topEl){
