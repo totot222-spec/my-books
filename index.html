@@ -816,7 +816,17 @@ function deleteVolume(vid){
  b.volumes=b.volumes.filter(x=>x.id!==vid);
  save();closeModal();renderDetail();
 }
-function addVolume(){let b=book();b.volumes.push({id:uid("v"),name:`第${b.volumes.length+1}巻`,cover:"",chapters:[]});save();renderDetail()}
+function addVolume(){
+ let b=book();
+ let maxNum=0;
+ b.volumes.forEach(v=>{
+  const m=/第(\d+)巻/.exec(v.name||"");
+  if(m) maxNum=Math.max(maxNum,parseInt(m[1],10));
+ });
+ const nextNum=Math.max(maxNum+1,b.volumes.length+1);
+ b.volumes.push({id:uid("v"),name:`第${nextNum}巻`,cover:"",chapters:[]});
+ save();renderDetail();
+}
 function importTextFiles(inputEl,vid){
  const files=[...inputEl.files];
  inputEl.value="";
