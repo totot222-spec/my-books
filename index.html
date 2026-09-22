@@ -586,7 +586,7 @@ function renderDetail(){
     <div class="volinfo"><b>${esc(v.name)}</b><span>${v.chapters.length} chapters・${v.chapters.reduce((a,c)=>a+count(c.text),0).toLocaleString()}文字</span></div>
     <span class="chev">›</span>
    </div>
-   <div id="vol-${v.id}" class="chapter-list">${v.chapters.map((c,ci)=>`<div class="chapter" onclick="openChapter('${v.id}','${c.id}')">
+   <div id="vol-${v.id}" class="chapter-list hidden">${v.chapters.map((c,ci)=>`<div class="chapter" onclick="openChapter('${v.id}','${c.id}')">
     ${state.chapterEditMode?`<div class="chapter-move" onclick="event.stopPropagation()">
      <button ${ci===0?"disabled":""} onclick="moveChapter('${v.id}','${c.id}',-1)">▲</button>
      <button ${ci===v.chapters.length-1?"disabled":""} onclick="moveChapter('${v.id}','${c.id}',1)">▼</button>
