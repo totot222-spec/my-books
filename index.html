@@ -462,22 +462,27 @@ function removeReplacement(i){data.replacements.splice(i,1);save();closeModal();
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
 function coverHTML(b,cls=""){return b.cover?`<div class="cover ${cls}"><img src="${esc(b.cover)}"></div>`:`<div class="cover placeholder ${cls}"><span>${esc(b.title)}</span></div>`}
 function resizeImageFile(file,maxDim,cb){
- const reader=new FileReader();
- reader.onload=e=>{
-  const img=new Image();
-  img.onload=()=>{
+ // Use an object URL (not FileReader/dataURL) to avoid holding a huge base64
+ // string in memory alongside the decoded bitmap — large camera photos can
+ // otherwise push mobile Safari over its memory limit and force a page reload.
+ const url=URL.createObjectURL(file);
+ const img=new Image();
+ const cleanup=()=>{ URL.revokeObjectURL(url); img.src=""; };
+ img.onload=()=>{
+  try{
    let w=img.width,h=img.height;
    if(w>h){ if(w>maxDim){h=Math.round(h*maxDim/w);w=maxDim} } else { if(h>maxDim){w=Math.round(w*maxDim/h);h=maxDim} }
    const canvas=document.createElement("canvas");
    canvas.width=w;canvas.height=h;
    canvas.getContext("2d").drawImage(img,0,0,w,h);
-   cb(canvas.toDataURL("image/jpeg",0.82));
-  };
-  img.onerror=()=>alert("画像を読み込めませんでした");
-  img.src=e.target.result;
+   const dataUrl=canvas.toDataURL("image/jpeg",0.82);
+   canvas.width=0;canvas.height=0;
+   cleanup();
+   cb(dataUrl);
+  }catch(e){ cleanup(); alert("画像の処理に失敗しました"); }
  };
- reader.onerror=()=>alert("ファイルを読み込めませんでした");
- reader.readAsDataURL(file);
+ img.onerror=()=>{ cleanup(); alert("画像を読み込めませんでした"); };
+ img.src=url;
 }
 function handleCoverFile(inputEl,prefix){
  const file=inputEl.files[0];
@@ -528,6 +533,30 @@ async function copyChapterText(targetId){
 }
 function shell(content,reader=false){
  document.getElementById("app").innerHTML=reader?`<div class="reader">${content}</div>`:`<div class="app">${content}</div>`;
+ saveNavState();
+}
+function saveNavState(){
+ try{
+  localStorage.setItem("my-books-nav",JSON.stringify({screen:state.screen,bookId:state.bookId,volumeId:state.volumeId,chapterId:state.chapterId}));
+ }catch(e){}
+}
+function restoreNavOrShelf(){
+ let nav=null;
+ try{ nav=JSON.parse(localStorage.getItem("my-books-nav")||"null"); }catch(e){}
+ if(nav && nav.bookId){
+  const b=data.books.find(x=>x.id===nav.bookId);
+  if(b){
+   state.bookId=b.id;
+   if(nav.screen==="reader" && nav.volumeId && nav.chapterId){
+    const v=b.volumes.find(x=>x.id===nav.volumeId);
+    const c=v?.chapters.find(x=>x.id===nav.chapterId);
+    if(v && c){ state.volumeId=v.id; state.chapterId=c.id; renderReader(); return; }
+   }
+   renderDetail();
+   return;
+  }
+ }
+ renderShelf();
 }
 function topBar(title,left="",right=""){
  return `<div class="topbar"><div class="topbar-inner">
@@ -539,6 +568,7 @@ function topBar(title,left="",right=""){
 const FILTER_LABEL={all:"すべて",unread:"未読",reading:"読書中",done:"既読"};
 function setFilter(f){state.filter=f;renderShelf()}
 function renderShelf(){
+ state.screen="shelf";state.bookId=null;state.volumeId=null;state.chapterId=null;
  let list=data.books.filter(b=>b.title.toLowerCase().includes(state.search.toLowerCase()) && (state.filter==="all"||b.status===state.filter));
  shell(`
  ${topBar("本棚","","<button class='iconbtn' onclick='openSearch()'>⌕</button><button class='iconbtn' onclick='newBook()'>＋</button>")}
@@ -566,6 +596,7 @@ function openSearch(){let e=document.getElementById("searchBox"); if(e){e.classL
 function openBook(id){state.bookId=id;state.screen="detail";state.chapterEditMode=false;renderDetail()}
 function toggleChapterEditMode(){state.chapterEditMode=!state.chapterEditMode;renderDetail()}
 function renderDetail(){
+ state.screen="detail";state.volumeId=null;state.chapterId=null;
  const b=book();
  shell(`
  ${topBar(b.title,"renderShelf()","<button class='navedit' onclick='editBook()'>編集</button>")}
@@ -632,6 +663,7 @@ function recordProgress(ratio){
  progressSaveTimer=setTimeout(()=>{ try{save()}catch(e){} },400);
 }
 function renderReader(resumeRatio){
+ state.screen="reader";
  const c=chapter(); const v=volume();
  const idx=v.chapters.findIndex(x=>x.id===c.id);
  const total=v.chapters.length;
@@ -1015,7 +1047,7 @@ window.addEventListener("scroll",()=>{
   lastScrollY=cur;
  }
 },{passive:true});
-renderShelf();
+restoreNavOrShelf();
 if("serviceWorker"in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
