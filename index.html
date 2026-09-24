@@ -467,7 +467,9 @@ function resizeImageFile(file,maxDim,cb){
  // otherwise push mobile Safari over its memory limit and force a page reload.
  const url=URL.createObjectURL(file);
  const img=new Image();
- const cleanup=()=>{ URL.revokeObjectURL(url); img.src=""; };
+ // NOTE: never reassign img.src to "" here — on some browsers that itself
+ // fires a bogus error event, re-entering onerror and looping the alert().
+ const cleanup=()=>{ URL.revokeObjectURL(url); img.onload=null; img.onerror=null; };
  img.onload=()=>{
   try{
    let w=img.width,h=img.height;
