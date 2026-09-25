@@ -193,8 +193,22 @@ const defaultData={
  ],
  replacements:[]
 };
-let data;
-try { data=JSON.parse(localStorage.getItem(KEY)||"null"); } catch(e) { data=null; }
+let data=null;
+// 本のデータは容量の大きい IndexedDB に保存する（localStorage は約5MBで上限に達するため）
+const IDB_NAME="my-books-db", IDB_STORE="kv";
+let idbPromise=null;
+function idb(){
+ if(!idbPromise) idbPromise=new Promise((res,rej)=>{
+  if(!("indexedDB" in window)){rej(new Error("IndexedDB unavailable"));return}
+  const r=indexedDB.open(IDB_NAME,1);
+  r.onupgradeneeded=()=>r.result.createObjectStore(IDB_STORE);
+  r.onsuccess=()=>res(r.result);
+  r.onerror=()=>rej(r.error);
+ });
+ return idbPromise;
+}
+function idbGet(key){return idb().then(db=>new Promise((res,rej)=>{const q=db.transaction(IDB_STORE,"readonly").objectStore(IDB_STORE).get(key);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}))}
+function idbPut(key,val){return idb().then(db=>new Promise((res,rej)=>{const t=db.transaction(IDB_STORE,"readwrite");t.objectStore(IDB_STORE).put(val,key);t.oncomplete=()=>res();t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)}))}
 function normalizeData(d){
   if(!d || !Array.isArray(d.books)) return structuredClone(defaultData);
   d.books=d.books.map((b,i)=>({
@@ -214,10 +228,32 @@ function normalizeData(d){
   d.replacements=Array.isArray(d.replacements)?d.replacements.filter(r=>r&&typeof r.from==="string").map(r=>({from:r.from,to:typeof r.to==="string"?r.to:""})):[];
   return d;
 }
-data=normalizeData(data);
 let state={screen:"shelf",bookId:null,volumeId:null,chapterId:null,vertical:false,search:"",filter:"all",readerScrollRatio:0,chapterEditMode:false};
 
-function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+let saveWarned=false;
+function save(){
+ let json;
+ try{ json=JSON.stringify(data); }catch(e){ return; }
+ idbPut("data",json).then(()=>{ saveWarned=false; }).catch(()=>{
+  try{ localStorage.setItem(KEY,json); saveWarned=false; }
+  catch(e){
+   if(!saveWarned){ saveWarned=true; alert("保存に失敗しました。容量が足りない可能性があります。\n設定 →「データを書き出す」でバックアップを取ってください。"); }
+  }
+ });
+}
+async function initApp(){
+ let raw=null, fromLocal=false;
+ try{ raw=await idbGet("data"); }catch(e){}
+ if(raw==null){ raw=localStorage.getItem(KEY); fromLocal=raw!=null; }
+ try{ data=JSON.parse(raw||"null"); }catch(e){ data=null; }
+ data=normalizeData(data);
+ if(fromLocal){
+  // 旧バージョン（localStorage）からの引っ越し。IndexedDBへの保存が成功したら古い方を消して容量を空ける
+  try{ await idbPut("data",JSON.stringify(data)); localStorage.removeItem(KEY); }catch(e){}
+ }
+ try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+ restoreNavOrShelf();
+}
 function uid(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function book(){return data.books.find(x=>x.id===state.bookId)}
 function volume(){return book()?.volumes.find(x=>x.id===state.volumeId)}
@@ -1049,7 +1085,10 @@ window.addEventListener("scroll",()=>{
   lastScrollY=cur;
  }
 },{passive:true});
-restoreNavOrShelf();
+document.addEventListener("visibilitychange",()=>{
+ if(document.hidden && progressSaveTimer){ clearTimeout(progressSaveTimer); progressSaveTimer=null; save(); }
+});
+initApp();
 if("serviceWorker"in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
