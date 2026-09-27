@@ -159,8 +159,10 @@ input[type=range].seek{width:100%;accent-color:var(--accent)}
 .modal{background:#fff;width:100%;max-height:85vh;border-radius:24px 24px 0 0;padding:20px;overflow:auto}
 .modal h2{margin:0 0 18px;font-size:18px}
 /* 読書位置：上端の細いバー・％ボタン・ジャンプ用シート */
-.readbar{position:fixed;top:0;left:0;right:0;height:3px;z-index:40;background:transparent;pointer-events:none}
-.readbar div{height:100%;background:var(--accent);border-radius:0 2px 2px 0;transition:width .12s linear}
+.readbar{position:fixed;top:0;left:0;right:0;height:2px;z-index:40;background:transparent;pointer-events:none}
+.readbar div{height:100%;background:rgba(110,122,140,.28);border-radius:0 2px 2px 0;transition:width .12s linear}
+.reader[data-theme=sepia] .readbar div{background:rgba(120,95,60,.25)}
+.reader[data-theme=dark] .readbar div{background:rgba(200,208,220,.22)}
 .toolbar4 .pct-btn{color:var(--accent-dark);font-variant-numeric:tabular-nums;min-width:62px;justify-content:center}
 .reader[data-theme=dark] .toolbar4 .pct-btn{color:#8fb4f0}
 .modal-back.clear{background:rgba(0,0,0,.06)}
