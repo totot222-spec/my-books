@@ -158,6 +158,34 @@ input[type=range].seek{width:100%;accent-color:var(--accent)}
 .modal-back{position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:100;display:flex;align-items:flex-end}
 .modal{background:#fff;width:100%;max-height:85vh;border-radius:24px 24px 0 0;padding:20px;overflow:auto}
 .modal h2{margin:0 0 18px;font-size:18px}
+/* 読書位置：上端の細いバー・％ボタン・ジャンプ用シート */
+.readbar{position:fixed;top:0;left:0;right:0;height:3px;z-index:40;background:transparent;pointer-events:none}
+.readbar div{height:100%;background:var(--accent);border-radius:0 2px 2px 0;transition:width .12s linear}
+.toolbar4 .pct-btn{color:var(--accent-dark);font-variant-numeric:tabular-nums;min-width:62px;justify-content:center}
+.reader[data-theme=dark] .toolbar4 .pct-btn{color:#8fb4f0}
+.modal-back.clear{background:rgba(0,0,0,.06)}
+.modal-back.clear .modal{box-shadow:0 -8px 30px rgba(20,40,80,.16)}
+.seek-sheet{padding:2px 2px 4px}
+.seek-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;color:var(--muted)}
+.seek-where{font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seek-count{flex:0 0 auto}
+.seek-big{text-align:center;font-size:52px;font-weight:800;color:var(--accent);line-height:1.1;margin:10px 0 6px;font-variant-numeric:tabular-nums}
+.seek-big small{font-size:22px;margin-left:2px;font-weight:700}
+input[type=range].seek-lg{-webkit-appearance:none;appearance:none;width:100%;height:34px;background:transparent;margin:0}
+input[type=range].seek-lg::-webkit-slider-runnable-track{height:10px;border-radius:6px;background:linear-gradient(to right,var(--accent) 0,var(--accent) var(--p,0%),#dfe6f1 var(--p,0%),#dfe6f1 100%)}
+input[type=range].seek-lg::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:30px;height:30px;border-radius:50%;background:#fff;border:3px solid var(--accent);margin-top:-10px;box-shadow:0 2px 8px rgba(30,70,140,.28)}
+input[type=range].seek-lg::-moz-range-track{height:10px;border-radius:6px;background:#dfe6f1}
+input[type=range].seek-lg::-moz-range-progress{height:10px;border-radius:6px;background:var(--accent)}
+input[type=range].seek-lg::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--accent)}
+.seek-ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding:0 4px;margin-top:2px}
+.seek-chips,.seek-step,.seek-chapter{display:flex;gap:7px;margin-top:14px}
+.seek-chips button,.seek-step button,.seek-chapter button{flex:1;padding:10px 0;border-radius:12px;background:#eef3fb;color:var(--accent-dark);font-weight:700;font-size:13.5px}
+.seek-step button{background:#f4f6fa;color:#4a5566}
+.seek-chapter button{background:#fff;border:1px solid var(--line)}
+.seek-chapter button:disabled{opacity:.4}
+.seek-done{width:100%;margin-top:16px}
+.toast{position:fixed;left:50%;bottom:88px;transform:translate(-50%,20px);max-width:88vw;background:rgba(30,36,48,.94);color:#fff;font-size:13px;line-height:1.5;padding:10px 16px;border-radius:12px;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
 .row{display:flex;gap:10px;align-items:center}
 .row>*{flex:1}
 .danger{color:#d33}
@@ -169,6 +197,8 @@ input[type=range].seek{width:100%;accent-color:var(--accent)}
 .navbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 14px;font-size:11px;color:#8a94a3;font-weight:600}
 .navbtn .ic{font-size:21px}
 .navbtn.active{color:var(--accent)}
+.ic-svg{width:1em;height:1em;display:block;margin:auto}
+.navbtn .ic-svg{width:.82em;height:.82em;margin:.09em auto}
 </style>
 </head>
 <body>
@@ -202,8 +232,15 @@ function idb(){
   if(!("indexedDB" in window)){rej(new Error("IndexedDB unavailable"));return}
   const r=indexedDB.open(IDB_NAME,1);
   r.onupgradeneeded=()=>r.result.createObjectStore(IDB_STORE);
-  r.onsuccess=()=>res(r.result);
-  r.onerror=()=>rej(r.error);
+  r.onsuccess=()=>{
+   const db=r.result;
+   // iOSはアプリをバックグラウンドにすると接続を切ることがある → 次回は開き直す
+   db.onclose=()=>{ idbPromise=null; };
+   db.onversionchange=()=>{ try{db.close()}catch(e){} idbPromise=null; };
+   res(db);
+  };
+  r.onerror=()=>{ idbPromise=null; rej(r.error); };
+  r.onblocked=()=>{ idbPromise=null; rej(new Error("blocked")); };
  });
  return idbPromise;
 }
@@ -230,27 +267,62 @@ function normalizeData(d){
 }
 let state={screen:"shelf",bookId:null,volumeId:null,chapterId:null,vertical:false,search:"",filter:"all",readerScrollRatio:0,chapterEditMode:false};
 
-let saveWarned=false;
-function save(){
- let json;
- try{ json=JSON.stringify(data); }catch(e){ return; }
- idbPut("data",json).then(()=>{ saveWarned=false; }).catch(()=>{
-  try{ localStorage.setItem(KEY,json); saveWarned=false; }
-  catch(e){
-   if(!saveWarned){ saveWarned=true; alert("保存に失敗しました。容量が足りない可能性があります。\n設定 →「データを書き出す」でバックアップを取ってください。"); }
+// ---- 本データの保存（IndexedDB）：まとめて・順番に・失敗したら接続し直して再試行 ----
+let saveTimer=null, saving=false, saveAgain=false, saveFailed=false;
+function save(){ clearTimeout(saveTimer); saveTimer=setTimeout(flushSave,150); }
+async function flushSave(){
+ clearTimeout(saveTimer); saveTimer=null;
+ if(!data) return;
+ if(saving){ saveAgain=true; return; }
+ saving=true;
+ let json=null;
+ try{ data.savedAt=Date.now(); json=JSON.stringify(data); }catch(e){}
+ let ok=false;
+ if(json){
+  for(let i=0;i<3&&!ok;i++){
+   try{ await idbPut("data",json); ok=true; }
+   catch(e){ idbPromise=null; await new Promise(r=>setTimeout(r,300*(i+1))); }
   }
- });
+  if(ok){ try{ localStorage.removeItem(KEY); }catch(e){} }
+  else { try{ localStorage.setItem(KEY,json); ok=true; }catch(e){} }
+ }
+ saving=false;
+ if(ok){ saveFailed=false; }
+ else {
+  saveFailed=true; // 画面に戻ってきたときに自動でもう一度保存する
+  if(!document.hidden) toast("保存できませんでした。自動で再試行します。続く場合は 設定→データを書き出す でバックアップを");
+ }
+ if(saveAgain){ saveAgain=false; flushSave(); }
+}
+function toast(msg){
+ let t=document.getElementById("toast");
+ if(!t){ t=document.createElement("div"); t.id="toast"; t.className="toast"; document.body.appendChild(t); }
+ t.textContent=msg; t.classList.add("show");
+ clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),4200);
+}
+// ---- 読書位置は小さいので localStorage に即時保存（アプリを急に閉じても残る） ----
+const PROGRESS_KEY="my-books-progress";
+function loadProgressMap(){ try{ return JSON.parse(localStorage.getItem(PROGRESS_KEY)||"{}")||{}; }catch(e){ return {}; } }
+function writeProgressNow(){
+ const b=data&&book();
+ if(!b||!b.lastRead) return;
+ const m=loadProgressMap();
+ m[b.id]={...b.lastRead,t:Date.now()};
+ try{ localStorage.setItem(PROGRESS_KEY,JSON.stringify(m)); }catch(e){}
 }
 async function initApp(){
- let raw=null, fromLocal=false;
- try{ raw=await idbGet("data"); }catch(e){}
- if(raw==null){ raw=localStorage.getItem(KEY); fromLocal=raw!=null; }
- try{ data=JSON.parse(raw||"null"); }catch(e){ data=null; }
- data=normalizeData(data);
- if(fromLocal){
-  // 旧バージョン（localStorage）からの引っ越し。IndexedDBへの保存が成功したら古い方を消して容量を空ける
-  try{ await idbPut("data",JSON.stringify(data)); localStorage.removeItem(KEY); }catch(e){}
- }
+ let idbRaw=null, lsRaw=null;
+ try{ idbRaw=await idbGet("data"); }catch(e){}
+ try{ lsRaw=localStorage.getItem(KEY); }catch(e){}
+ const parse=s=>{ try{ return JSON.parse(s||"null"); }catch(e){ return null; } };
+ let a=parse(idbRaw), b=parse(lsRaw);
+ // 両方ある場合は新しい方を使う（IndexedDBが一時的に失敗してlocalStorageに逃がした場合など）
+ let chosen=a;
+ if(b && (!a || (b.savedAt||0)>(a.savedAt||0))) chosen=b;
+ data=normalizeData(chosen);
+ const pm=loadProgressMap();
+ data.books.forEach(bk=>{ const p=pm[bk.id]; if(p&&typeof p.volumeId==="string"&&typeof p.chapterId==="string") bk.lastRead={volumeId:p.volumeId,chapterId:p.chapterId,scrollRatio:+p.scrollRatio||0}; });
+ if(chosen===b && b) flushSave(); // localStorage側のデータをIndexedDBへ引っ越し
  try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
  restoreNavOrShelf();
 }
@@ -626,7 +698,7 @@ function renderShelf(){
   <button class="navbtn active" onclick="renderShelf()"><span class="ic">⌂</span>本棚</button>
   <button class="navbtn" onclick="openSearch()"><span class="ic">⌕</span>さがす</button>
   <button class="navbtn" onclick="newBook()"><span class="ic">＋</span>追加</button>
-  <button class="navbtn" onclick="openSettings()"><span class="ic">⚙</span>設定</button>
+  <button class="navbtn" onclick="openSettings()"><span class="ic"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>設定</button>
  </div>
  `);
 }
@@ -646,7 +718,7 @@ function renderDetail(){
    <div class="detail-stat">${b.volumes.length}巻・総文字数 ${totalBook(b).toLocaleString()}文字</div>
   </div></div>
   <button class="primary fullbtn" onclick="continueReading()">続きを読む</button>
-  ${b.lastRead&&b.volumes.find(v=>v.id===b.lastRead.volumeId)?.chapters.find(c=>c.id===b.lastRead.chapterId)?`<div class="filehint" style="text-align:center;margin-top:8px">前回の続きから再開します：${esc((()=>{const v=b.volumes.find(v=>v.id===b.lastRead.volumeId);const c=v.chapters.find(c=>c.id===b.lastRead.chapterId);return `${v.name}・${c.title||"Chapter"}`})())}</div>`:""}
+  ${b.lastRead&&b.volumes.find(v=>v.id===b.lastRead.volumeId)?.chapters.find(c=>c.id===b.lastRead.chapterId)?`<div class="filehint" style="text-align:center;margin-top:8px">前回の続きから再開します：${esc((()=>{const v=b.volumes.find(v=>v.id===b.lastRead.volumeId);const c=v.chapters.find(c=>c.id===b.lastRead.chapterId);return `${v.name}・${c.title||"Chapter"}（${Math.round((b.lastRead.scrollRatio||0)*100)}%）`})())}</div>`:""}
   <div class="section-head" style="margin-top:26px"><h2>巻一覧</h2><div class="row" style="flex:0 0 auto;gap:14px"><button class="section-link" onclick="toggleChapterEditMode()">${state.chapterEditMode?"完了":"編集"}</button><button class="section-link" onclick="addVolume()">＋ 巻を追加</button></div></div>
   <div class="volumes-card">
   ${b.volumes.map((v,vi)=>`<div class="volgroup">
@@ -697,15 +769,72 @@ function recordProgress(ratio){
  const b=book();
  if(!b||!state.volumeId||!state.chapterId) return;
  b.lastRead={volumeId:state.volumeId,chapterId:state.chapterId,scrollRatio:typeof ratio==="number"?ratio:(state.readerScrollRatio||0)};
+ // 大きな本データ全体は書き直さず、小さな位置情報だけを素早く保存
  clearTimeout(progressSaveTimer);
- progressSaveTimer=setTimeout(()=>{ try{save()}catch(e){} },400);
+ progressSaveTimer=setTimeout(()=>{ progressSaveTimer=null; writeProgressNow(); },250);
 }
+// ---- 読書位置（％）の計算とジャンプ ----
+function readerMetrics(){
+ const el=document.querySelector(".reader-body");
+ if(!el) return null;
+ return {top:el.getBoundingClientRect().top+window.scrollY, scrollable:Math.max(1,el.scrollHeight-window.innerHeight)};
+}
+function currentReaderRatio(){
+ const m=readerMetrics(); if(!m) return 0;
+ return Math.max(0,Math.min(1,(window.scrollY-m.top)/m.scrollable));
+}
+function scrollToRatio(r){
+ const m=readerMetrics(); if(!m) return;
+ r=Math.max(0,Math.min(1,r));
+ window.scrollTo(0, r<=0 ? 0 : m.top + r*m.scrollable);
+ state.readerScrollRatio=r;
+ recordProgress(r);
+ updatePercentUI(r);
+}
+function updatePercentUI(r){
+ const p=Math.round(r*100);
+ const v=document.getElementById("pctVal"); if(v) v.textContent=p+"%";
+ const bar=document.getElementById("readBar"); if(bar) bar.style.width=(r*100)+"%";
+}
+function openSeek(){
+ const r=currentReaderRatio(), p=Math.round(r*100);
+ const v=volume(), c=chapter();
+ const idx=v.chapters.findIndex(x=>x.id===c.id);
+ modal(`<div class="seek-sheet">
+  <div class="seek-head"><span class="seek-where">${esc(v.name)}・${esc(c.title||"Chapter")}</span><span class="seek-count">${idx+1} / ${v.chapters.length}章</span></div>
+  <div class="seek-big"><span id="seekBig">${p}</span><small>%</small></div>
+  <input id="seekRange" class="seek-lg" type="range" min="0" max="100" step="1" value="${p}" style="--p:${p}%" oninput="seekLive(this.value)">
+  <div class="seek-ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+  <div class="seek-chips">
+   <button onclick="seekTo(0)">先頭</button><button onclick="seekTo(25)">25%</button><button onclick="seekTo(50)">50%</button><button onclick="seekTo(75)">75%</button><button onclick="seekTo(100)">末尾</button>
+  </div>
+  <div class="seek-step">
+   <button onclick="seekStep(-5)">−5%</button><button onclick="seekStep(-1)">−1%</button>
+   <button onclick="seekStep(1)">＋1%</button><button onclick="seekStep(5)">＋5%</button>
+  </div>
+  <div class="seek-chapter">
+   <button ${idx<=0?"disabled":""} onclick="closeModal();jumpChapter(${idx})">‹ 前の章</button>
+   <button ${idx>=v.chapters.length-1?"disabled":""} onclick="closeModal();jumpChapter(${idx+2})">次の章 ›</button>
+  </div>
+  <button class="primary seek-done" onclick="closeModal()">閉じる</button>
+ </div>`);
+ const back=document.getElementById("modal"); if(back) back.classList.add("clear");
+}
+function seekLive(val){
+ const p=Math.max(0,Math.min(100,+val||0));
+ const big=document.getElementById("seekBig"); if(big) big.textContent=p;
+ const rg=document.getElementById("seekRange"); if(rg){ rg.value=p; rg.style.setProperty("--p",p+"%"); }
+ scrollToRatio(p/100);
+}
+function seekTo(p){ seekLive(p); }
+function seekStep(d){ const rg=document.getElementById("seekRange"); seekLive((+(rg?rg.value:0))+d); }
 function renderReader(resumeRatio){
  state.screen="reader";
  const c=chapter(); const v=volume();
  const idx=v.chapters.findIndex(x=>x.id===c.id);
  const total=v.chapters.length;
  shell(`
+ <div class="readbar"><div id="readBar" style="width:${(resumeRatio||0)*100}%"></div></div>
  <div class="reader-top" id="readerTop"><div class="topbar-inner">
   <button class="navback" onclick="renderDetail()">‹ 戻る</button>
   <div class="title-center">${esc(c.title||"Chapter")}</div>
@@ -717,10 +846,11 @@ function renderReader(resumeRatio){
   <div class="seek-label">${idx+1} / ${total}</div>
  </div>
  <div class="toolbar4">
+  <button class="pct-btn" onclick="openSeek()" aria-label="読書位置へ移動"><span class="ic">◷</span><span id="pctVal">${Math.round((resumeRatio||0)*100)}%</span></button>
   <button onclick="chapterMenu()"><span class="ic">☰</span>目次</button>
   <button onclick="fontPopover()"><span class="ic">A</span>文字</button>
   <button onclick="cycleTheme()"><span class="ic">◐</span>背景</button>
-  <button onclick="openReaderSettings()"><span class="ic">⚙</span>設定</button>
+  <button onclick="openReaderSettings()"><span class="ic"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>設定</button>
  </div>
  `,true);
  let readerEl=document.querySelector(".reader");
@@ -731,16 +861,12 @@ function renderReader(resumeRatio){
  if(topEl) topEl.classList.remove("reader-top-hidden");
  if(typeof resumeRatio==="number"&&resumeRatio>0){
   requestAnimationFrame(()=>{
-   const bodyEl=document.querySelector(".reader-body");
-   if(bodyEl){
-    const rect=bodyEl.getBoundingClientRect();
-    const bodyTop=rect.top+window.scrollY;
-    const scrollable=Math.max(1,bodyEl.scrollHeight-window.innerHeight);
-    window.scrollTo(0,bodyTop+resumeRatio*scrollable);
-   }
+   scrollToRatio(resumeRatio);
    lastScrollY=window.scrollY;
   });
  } else {
+  window.scrollTo(0,0);
+  updatePercentUI(0);
   lastScrollY=window.scrollY;
  }
 }
@@ -1056,20 +1182,30 @@ function newBook(){modal(`<h2>本を追加</h2>
  </div>
  <button class="primary" onclick="createBook()">追加</button> <button class="secondary" onclick="closeModal()">キャンセル</button>`)}
 function createBook(){let title=document.getElementById("nb-title").value.trim()||"新しい小説";data.books.push({id:uid("b"),title,author:document.getElementById("nb-author").value.trim(),cover:document.getElementById("nb-cover").value.trim(),status:"unread",tags:[],synopsis:"",volumes:[]});save();closeModal();renderShelf()}
-function openSettings(){modal(`<h2>設定</h2><div class="field"><label>読書表示</label><div class="small">リーダーでは横書き・縦書き、文字サイズ、背景テーマを切り替えられます。</div></div><div class="field"><label>翻訳整形</label><button class="secondary" onclick="closeModal();openReplacements()">単語の一括置き換えリストを編集</button></div><div class="field"><label>データ</label><button class="secondary" onclick="exportData()">データを書き出す</button> <button class="secondary" onclick="importData()">データを読み込む</button></div><button class="secondary" onclick="closeModal()">閉じる</button>`)}
+function openSettings(){modal(`<h2>設定</h2><div class="field"><label>読書表示</label><div class="small">リーダーでは横書き・縦書き、文字サイズ、背景テーマを切り替えられます。</div></div><div class="field"><label>翻訳整形</label><button class="secondary" onclick="closeModal();openReplacements()">単語の一括置き換えリストを編集</button></div><div class="field"><label>データ</label><div class="filehint" id="storageInfo" style="margin-bottom:10px">使用容量を確認中…</div><button class="secondary" onclick="exportData()">データを書き出す</button> <button class="secondary" onclick="importData()">データを読み込む</button></div><button class="secondary" onclick="closeModal()">閉じる</button>`);showStorageInfo()}
+async function showStorageInfo(){
+ const el=document.getElementById("storageInfo"); if(!el) return;
+ const mb=n=>n<1024*1024?Math.max(1,Math.round(n/1024))+"KB":(n/1024/1024).toFixed(1)+"MB";
+ let dataSize=0; try{ dataSize=new Blob([JSON.stringify(data)]).size; }catch(e){}
+ let line=`本のデータ：約${mb(dataSize)}`;
+ try{
+  if(navigator.storage&&navigator.storage.estimate){
+   const est=await navigator.storage.estimate();
+   if(est.quota) line+=` ／ このアプリが使える上限：約${est.quota>1024*1024*1024?(est.quota/1024/1024/1024).toFixed(1)+"GB":mb(est.quota)}`;
+  }
+  if(navigator.storage&&navigator.storage.persisted){ line+=(await navigator.storage.persisted())?"（自動削除から保護中）":""; }
+ }catch(e){}
+ el.textContent=line;
+}
 function exportData(){let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.download="my-books-backup.json";a.click()}
 function importData(){let i=document.createElement("input");i.type="file";i.accept=".json";i.onchange=()=>{let f=i.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{data=normalizeData(JSON.parse(r.result));save();closeModal();renderShelf()}catch(e){alert("読み込みに失敗しました")}};r.readAsText(f)};i.click()}
 function modal(html){let d=document.createElement("div");d.id="modal";d.className="modal-back";d.innerHTML=`<div class="modal">${html}</div>`;d.onclick=e=>{if(e.target===d)closeModal()};document.body.appendChild(d)}
 function closeModal(){document.getElementById("modal")?.remove()}
 window.addEventListener("scroll",()=>{
- const bodyEl=document.querySelector(".reader-body");
- if(!bodyEl) return;
- const rect=bodyEl.getBoundingClientRect();
- const bodyTop=rect.top+window.scrollY;
- const scrollable=Math.max(1,bodyEl.scrollHeight-window.innerHeight);
- const scrolledIntoBody=window.scrollY-bodyTop;
- state.readerScrollRatio=Math.max(0,Math.min(1,scrolledIntoBody/scrollable));
+ if(!document.querySelector(".reader-body")) return;
+ state.readerScrollRatio=currentReaderRatio();
  recordProgress(state.readerScrollRatio);
+ updatePercentUI(state.readerScrollRatio);
 
  const topEl=document.getElementById("readerTop");
  if(topEl){
@@ -1085,9 +1221,17 @@ window.addEventListener("scroll",()=>{
   lastScrollY=cur;
  }
 },{passive:true});
+function flushAllNow(){
+ if(!data) return;
+ clearTimeout(progressSaveTimer); progressSaveTimer=null;
+ writeProgressNow();
+ if(saveTimer) flushSave();
+}
 document.addEventListener("visibilitychange",()=>{
- if(document.hidden && progressSaveTimer){ clearTimeout(progressSaveTimer); progressSaveTimer=null; save(); }
+ if(document.hidden) flushAllNow();
+ else if(saveFailed) flushSave(); // 戻ってきたら失敗分を再保存
 });
+window.addEventListener("pagehide",flushAllNow);
 initApp();
 if("serviceWorker"in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
