@@ -662,7 +662,7 @@ function restoreNavOrShelf(){
    if(nav.screen==="reader" && nav.volumeId && nav.chapterId){
     const v=b.volumes.find(x=>x.id===nav.volumeId);
     const c=v?.chapters.find(x=>x.id===nav.chapterId);
-    if(v && c){ state.volumeId=v.id; state.chapterId=c.id; renderReader(); return; }
+    if(v && c){ state.volumeId=v.id; state.chapterId=c.id; const lr=b.lastRead; renderReader(lr&&lr.chapterId===c.id?(lr.scrollRatio||0):0); return; }
    }
    renderDetail();
    return;
@@ -890,10 +890,11 @@ function cycleTheme(){
  let el=document.querySelector(".reader");
  if(el) el.dataset.theme=next;
 }
-function setDirection(v){state.vertical=v;renderReader()}
+function setDirection(v){const r=currentReaderRatio();state.vertical=v;renderReader(r)}
 function font(delta){let e=document.getElementById("readerText");if(!e)return;let n=parseFloat(getComputedStyle(e).fontSize)+delta;n=Math.max(14,Math.min(34,n));e.style.fontSize=n+"px";try{localStorage.setItem("my-books-font",n)}catch(err){}}
 function openReaderSettings(){modal(`<h2>読書設定</h2><div class="field"><label>表示方向</label><div class="row"><button class="secondary ${!state.vertical?'':''}" onclick="setDirection(false);closeModal()">横書き</button><button class="secondary" onclick="setDirection(true);closeModal()">縦書き</button></div></div><div class="field"><label>文字サイズ</label><div class="row"><button class="secondary" onclick="font(-1)">A−</button><button class="secondary" onclick="font(1)">A＋</button></div></div><button class="secondary" onclick="closeModal()">閉じる</button>`)}
 function editChapter(){
+ state.editReturnY=window.scrollY; state.editReturnRatio=currentReaderRatio();
  const c=chapter();
  modal(`<h2>チャプター編集</h2><div class="field"><label>タイトル</label><input id="ec-title" value="${esc(c.title)}"></div>
  <div class="field">
@@ -953,7 +954,21 @@ function jumpTextareaToReadingPosition(){
   if(hint && ratio>0) hint.textContent="読んでいた位置あたりを選択表示しています";
  });
 }
-function saveChapterEdit(){let c=chapter();c.title=document.getElementById("ec-title").value;c.text=document.getElementById("ec-text").value;save();closeModal();renderReader()}
+function saveChapterEdit(){
+ let c=chapter();c.title=document.getElementById("ec-title").value;c.text=document.getElementById("ec-text").value;save();closeModal();
+ returnToReaderPosition();
+}
+function returnToReaderPosition(){
+ const y=state.editReturnY, r=state.editReturnRatio;
+ renderReader(typeof r==="number"?r:0);
+ if(typeof y==="number"){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+   window.scrollTo(0,y);
+   const nr=currentReaderRatio(); state.readerScrollRatio=nr; recordProgress(nr); updatePercentUI(nr);
+   lastScrollY=window.scrollY;
+  }));
+ }
+}
 function deleteChapter(){if(!confirm("このチャプターを削除しますか？"))return;let v=volume();v.chapters=v.chapters.filter(c=>c.id!==state.chapterId);v.chapters.forEach((c,i)=>{ if(/^Chapter \d+$/.test(c.title)) c.title=`Chapter ${String(i+1).padStart(2,"0")}`; });save();closeModal();state.chapterId=null;renderDetail()}
 function mergeChapterWithNext(vid,cid){
  const v=book().volumes.find(x=>x.id===vid);
