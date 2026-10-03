@@ -130,6 +130,9 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 .repl-del{flex:0 0 auto;color:#d33;font-size:16px;padding:2px 6px}
 .repl-empty{font-size:12.5px;color:var(--muted);padding:4px 0 8px}
 .repl-add{width:100%;margin-top:9px;font-size:13px;padding:9px}
+.repl-foot{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.repl-link{font-size:13px;font-weight:700;color:var(--accent);padding:6px 0;white-space:nowrap;background:none}
+.repl-link.muted{font-size:12px;font-weight:600;color:var(--muted)}
 
 /* reader */
 .reader{min-height:100vh;background:var(--paper);color:var(--text)}
@@ -159,6 +162,39 @@ input[type=range].seek{width:100%;accent-color:var(--accent)}
 .modal{background:#fff;width:100%;max-height:85vh;border-radius:24px 24px 0 0;padding:20px;overflow:auto}
 .modal h2{margin:0 0 18px;font-size:18px}
 /* 読書位置：上端の細いバー・％ボタン・ジャンプ用シート */
+/* 本文の装飾 */
+.reader-text .ln{min-height:1em}
+.reader-text.indent .ln:not(.noind){text-indent:1em}
+.ch-head{text-align:center;font-size:1.45em;font-weight:700;line-height:1.4;margin-block:1.6em 1.8em;text-indent:0}
+.sysbox{margin-block:1.3em;padding:.9em 1.1em;border-radius:12px;font-size:.92em;line-height:1.7}
+.sysbox .ln{text-indent:0}
+.sb-gray{background:#fff;border:3px solid #a8adb4}
+.sb-beige{background:#f6f2e8;border:4px solid #e7ddc4;border-radius:4px}
+.sb-blue{background:#fff;border:3px solid #8fa3cb;border-radius:14px}
+.reader[data-theme=sepia] .sb-gray,.reader[data-theme=sepia] .sb-blue{background:rgba(255,255,255,.45)}
+.reader[data-theme=sepia] .sb-beige{background:#efe4cc;border-color:#ddcfae}
+.reader[data-theme=dark] .sb-gray{background:#22262d;border-color:#5b616b}
+.reader[data-theme=dark] .sb-beige{background:#2d2a24;border-color:#5a5243}
+.reader[data-theme=dark] .sb-blue{background:#20252f;border-color:#4f6390}
+.sb-msg{padding:0;background:#e8e9eb;border:3px solid #3a8be0;border-radius:18px 18px 2px 2px;overflow:hidden;font-size:.92em}
+.msg-bar{height:1.5em;background:#3a8be0}
+.msg-body{padding:.75em .85em .9em;display:flex;flex-direction:column;align-items:flex-start;gap:.55em}
+.bubble{background:#f8f9fb;border:2px solid #cfe0f4;border-radius:1.2em;padding:.32em .95em;max-width:88%;line-height:1.55;text-indent:0;white-space:pre-wrap}
+.reader-text.vertical .msg-body{align-items:flex-start}
+.reader[data-theme=sepia] .sb-msg{background:#e9e1cf;border-color:#4a86c8}
+.reader[data-theme=sepia] .msg-bar{background:#4a86c8}
+.reader[data-theme=sepia] .bubble{background:#faf6ec;border-color:#d6cfbd}
+.reader[data-theme=dark] .sb-msg{background:#2a2d33;border-color:#3d74b8}
+.reader[data-theme=dark] .msg-bar{background:#3d74b8}
+.reader[data-theme=dark] .bubble{background:#363a42;border-color:#4b5566;color:#e3e6ea}
+.deco-bar .d-msg{background:#e8e9eb;border-color:#3a8be0;border-top-width:6px;color:#2f66c2;padding-top:3px}
+.deco-bar{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:8px}
+.deco-lbl{font-size:12px;color:var(--muted);margin-right:2px}
+.deco-bar button{font-size:12.5px;font-weight:600;color:var(--accent-dark);background:#f1f5fb;border-radius:9px;padding:6px 8px;border:2px solid transparent}
+.deco-bar .d-gray{background:#fff;border-color:#a8adb4;color:#555}
+.deco-bar .d-beige{background:#f6f2e8;border-color:#e2d6b8;color:#6b5a35}
+.deco-bar .d-blue{background:#fff;border-color:#8fa3cb;color:#3d5488}
+button.secondary.on{background:#eaf1fc;border-color:var(--accent);color:var(--accent-dark)}
 .readbar{position:fixed;top:0;left:0;right:0;height:2px;z-index:40;background:transparent;pointer-events:none}
 .readbar div{height:100%;background:rgba(110,122,140,.28);border-radius:0 2px 2px 0;transition:width .12s linear}
 .reader[data-theme=sepia] .readbar div{background:rgba(120,95,60,.25)}
@@ -250,12 +286,15 @@ function idbGet(key){return idb().then(db=>new Promise((res,rej)=>{const q=db.tr
 function idbPut(key,val){return idb().then(db=>new Promise((res,rej)=>{const t=db.transaction(IDB_STORE,"readwrite");t.objectStore(IDB_STORE).put(val,key);t.oncomplete=()=>res();t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)}))}
 function normalizeData(d){
   if(!d || !Array.isArray(d.books)) return structuredClone(defaultData);
+  const normR=a=>Array.isArray(a)?a.filter(r=>r&&typeof r.from==="string").map(r=>({from:r.from,to:typeof r.to==="string"?r.to:""})):[];
+  const legacyRepl=normR(d.replacements); // 旧版の「全作品共通リスト」→ 各作品へコピーして引き継ぐ
   d.books=d.books.map((b,i)=>({
     id:b.id||uid("b"), title:b.title||`作品${i+1}`, cover:b.cover||"",
     status:["unread","reading","done"].includes(b.status)?b.status:"unread",
     tags:Array.isArray(b.tags)?b.tags:[],
     synopsis:typeof b.synopsis==="string"?b.synopsis:"",
     author:typeof b.author==="string"?b.author:"",
+    replacements:Array.isArray(b.replacements)?normR(b.replacements):legacyRepl.map(r=>({...r})),
     lastRead:(b.lastRead&&typeof b.lastRead==="object"&&typeof b.lastRead.volumeId==="string"&&typeof b.lastRead.chapterId==="string")?{volumeId:b.lastRead.volumeId,chapterId:b.lastRead.chapterId,scrollRatio:typeof b.lastRead.scrollRatio==="number"?b.lastRead.scrollRatio:0}:null,
     volumes:Array.isArray(b.volumes)?b.volumes.map((v,j)=>({
       id:v.id||uid("v"), name:v.name||`第${j+1}巻`, cover:v.cover||"",
@@ -264,7 +303,7 @@ function normalizeData(d){
       })):[]
     })):[]
   }));
-  d.replacements=Array.isArray(d.replacements)?d.replacements.filter(r=>r&&typeof r.from==="string").map(r=>({from:r.from,to:typeof r.to==="string"?r.to:""})):[];
+  d.replacements=[];
   return d;
 }
 let state={screen:"shelf",bookId:null,volumeId:null,chapterId:null,vertical:false,search:"",filter:"all",readerScrollRatio:0,chapterEditMode:false};
@@ -369,9 +408,14 @@ function findBracketIssuesFor(text,openCh,closeCh,label){
 function findBracketIssues(text){
  return [...findBracketIssuesFor(text,"「","」","「"),...findBracketIssuesFor(text,"『","』","『")];
 }
+function replList(){
+ const b=book(); if(!b) return [];
+ if(!Array.isArray(b.replacements)) b.replacements=[];
+ return b.replacements;
+}
 function applyReplacements(text){
  let out=text;
- (data.replacements||[]).forEach(r=>{
+ replList().forEach(r=>{
   if(!r.from) return;
   out=out.split(r.from).join(r.to??"");
  });
@@ -385,7 +429,7 @@ function joinBrokenLines(text){
  lines.forEach(raw=>{
   let line=raw;
   if(line.trim()===""){ if(buffer!==null){out.push(buffer);buffer=null;} out.push(""); return; }
-  if(line.trim()==="***"){ if(buffer!==null){out.push(buffer);buffer=null;} out.push(line.trim()); return; }
+  if(line.trim()==="***"||isMarkupLine(line)){ if(buffer!==null){out.push(buffer);buffer=null;} out.push(line.trim()); return; }
   let trimmedEnd=line.replace(/[\s　]+$/,"");
   buffer = buffer===null ? trimmedEnd : buffer+trimmedEnd;
   let lastChar=buffer.slice(-1);
@@ -446,31 +490,37 @@ function addSceneBreakSpacing(text){
  return out.join("\n");
 }
 function replListHTML(){
- const list=data.replacements||[];
- if(!list.length) return '<div class="repl-empty">まだ登録されていません。「＋ 語句を追加」から登録してください。</div>';
+ const list=replList();
+ const foot=`<div class="repl-foot"><button class="repl-link" onclick="addReplacementInline()">＋ 語句を追加</button>${list.length?`<button class="repl-link muted" onclick="clearReplacementsInline()">リストを空にする</button>`:""}</div>`;
+ if(!list.length) return '<div class="repl-empty">まだ登録されていません</div>'+foot;
  return list.map((r,i)=>`<div class="repl-item">
   <input value="${esc(r.from)}" placeholder="変換前" onchange="updateReplacement(${i},'from',this.value)">
   <span class="repl-arrow">→</span>
   <input value="${esc(r.to)}" placeholder="変換後" onchange="updateReplacement(${i},'to',this.value)">
   <button class="repl-del" onclick="removeReplacementInline(${i})">✕</button>
- </div>`).join("");
+ </div>`).join("")+foot;
 }
 function refreshReplList(){
  const box=document.getElementById("repl-list");
  if(box) box.innerHTML=replListHTML();
 }
 function addReplacementInline(){
- data.replacements=data.replacements||[];
- data.replacements.push({from:"",to:""});
+ replList().push({from:"",to:""});
  save(); refreshReplList();
 }
 function removeReplacementInline(i){
- data.replacements.splice(i,1); save(); refreshReplList();
+ replList().splice(i,1); save(); refreshReplList();
+}
+function clearReplacementsInline(){
+ const l=replList(); if(!l.length) return;
+ if(!confirm(`「${book().title}」の置き換えリスト（${l.length}件）を空にします。よろしいですか？`)) return;
+ l.splice(0,l.length); save(); refreshReplList();
+ const st=document.getElementById("repl-status"); if(st) st.textContent="リストを空にしました";
 }
 function runReplacements(){
  const el=document.getElementById("ec-text");
  if(!el) return;
- const list=(data.replacements||[]).filter(r=>r.from);
+ const list=replList().filter(r=>r.from);
  if(!list.length){alert("置き換える語句が登録されていません。");return}
  const scope=document.querySelector('input[name="repl-scope"]:checked')?.value||"chapter";
  const st=document.getElementById("repl-status");
@@ -567,8 +617,93 @@ function openReplacements(){
  <button class="secondary" onclick="closeModal()" style="margin-top:14px;width:100%">閉じる</button>`);
 }
 function addReplacementRow(){data.replacements=data.replacements||[];data.replacements.push({from:"",to:""});save();closeModal();openReplacements();}
-function updateReplacement(i,field,val){if(!data.replacements[i])return;data.replacements[i][field]=val;save();}
+function updateReplacement(i,field,val){const l=replList();if(!l[i])return;l[i][field]=val;save();}
 function removeReplacement(i){data.replacements.splice(i,1);save();closeModal();openReplacements();}
+// ---- 本文の装飾記法 ----
+//   # 見出し          → 中央寄せの大きな見出し
+//   ::: グレー / ベージュ / ブルー  …  :::   → 枠で囲む
+const BOX_STYLES={"グレー":"gray","gray":"gray","灰":"gray","ベージュ":"beige","beige":"beige","ブルー":"blue","blue":"blue","青":"blue","メッセージ":"msg","message":"msg","チャット":"msg"};
+const BOX_NAMES={gray:"グレー",beige:"ベージュ",blue:"ブルー",msg:"メッセージ"};
+function isMarkupLine(line){ const t=line.trim(); return /^:::/.test(t)||/^#\s/.test(t); }
+function lineHTML(line,inBox){
+ if(line.trim()==="") return '<div class="ln">\u200b</div>';
+ const noind=inBox||/^[\s　]*[「『（(【\[<＜〈《\-－―—・※*＊]/.test(line);
+ return `<div class="ln${noind?' noind':''}">${esc(line.replace(/^[ 　]+/,""))}</div>`;
+}
+function renderBodyHTML(text){
+ const lines=String(text||"").split("\n");
+ let html="", box=null, boxLines=[];
+ const closeBox=()=>{
+  if(box==="msg"){
+   // メッセージ画面：1行＝吹き出し1つ（空行は詰める）
+   const bubbles=boxLines.filter(l=>l.trim()!=="").map(l=>`<div class="bubble">${esc(l.trim())}</div>`).join("");
+   html+=`<div class="sysbox sb-msg"><div class="msg-bar"></div><div class="msg-body">${bubbles}</div></div>`;
+  } else {
+   html+=`<div class="sysbox sb-${box}">${boxLines.map(l=>lineHTML(l,true)).join("")}</div>`;
+  }
+  box=null; boxLines=[];
+ };
+ for(const line of lines){
+  const t=line.trim();
+  const m=/^:::\s*(.*)$/.exec(t);
+  if(m){
+   if(box){ closeBox(); }
+   else { box=BOX_STYLES[m[1].trim()]||"gray"; }
+   continue;
+  }
+  if(box){ boxLines.push(line); continue; }
+  const h=/^#\s+(.*)$/.exec(t);
+  if(h){ html+=`<div class="ch-head">${esc(h[1])}</div>`; continue; }
+  html+=lineHTML(line,false);
+ }
+ if(box) closeBox(); // 閉じ忘れは最後まで枠にする
+ return html;
+}
+function updateEditorCount(){ const ta=document.getElementById("ec-text"), l=document.getElementById("ec-count"); if(ta&&l) l.textContent=count(ta.value).toLocaleString()+"文字"; }
+function decorate(kind){
+ const ta=document.getElementById("ec-text"); if(!ta) return;
+ const v=ta.value; let s=ta.selectionStart, e=ta.selectionEnd;
+ if(e>s && v[e-1]==="\n") e--;               // 行末の改行まで選んでいても次の行は含めない
+ const ls=v.lastIndexOf("\n",s-1)+1;
+ let le=v.indexOf("\n",e); if(le<0) le=v.length;
+ const block=v.slice(ls,le);
+ let out;
+ if(kind==="head"){
+  out=block.split("\n").map(l=>l.trim()===""?l:"# "+l.replace(/^#\s*/,"").trim()).join("\n");
+ } else {
+  out=`::: ${BOX_NAMES[kind]}\n${block}\n:::`;
+ }
+ ta.value=v.slice(0,ls)+out+v.slice(le);
+ ta.focus(); try{ ta.setSelectionRange(ls,ls+out.length); }catch(err){}
+ updateEditorCount();
+}
+function undecorate(){
+ const ta=document.getElementById("ec-text"); if(!ta) return;
+ const lines=ta.value.split("\n");
+ const curLine=ta.value.slice(0,ta.selectionStart).split("\n").length-1;
+ // 見出し行ならその記号だけ外す
+ if(/^#\s/.test(lines[curLine].trim())){
+  lines[curLine]=lines[curLine].replace(/^(\s*)#\s+/,"$1");
+  ta.value=lines.join("\n"); updateEditorCount(); return;
+ }
+ // カーソルを含む枠を探す（開始記号と終了記号の組）
+ let open=-1, inBox=false, start=-1;
+ for(let i=0;i<lines.length;i++){
+  if(/^:::/.test(lines[i].trim())){
+   if(!inBox){ inBox=true; start=i; }
+   else {
+    inBox=false;
+    if(curLine>=start && curLine<=i){ open=start; lines.splice(i,1); lines.splice(start,1); break; }
+   }
+  }
+ }
+ if(open<0 && inBox && curLine>=start){ open=start; lines.splice(start,1); } // 閉じ忘れの枠
+ if(open<0){ alert("外したい枠や見出しの中にカーソルを置いてから押してください"); return; }
+ ta.value=lines.join("\n");
+ const pos=lines.slice(0,open).join("\n").length+(open?1:0);
+ ta.focus(); try{ ta.setSelectionRange(pos,pos); }catch(err){}
+ updateEditorCount();
+}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
 function coverHTML(b,cls=""){return b.cover?`<div class="cover ${cls}"><img src="${esc(b.cover)}"></div>`:`<div class="cover placeholder ${cls}"><span>${esc(b.title)}</span></div>`}
 function resizeImageFile(file,maxDim,cb){
@@ -842,7 +977,7 @@ function renderReader(resumeRatio){
   <div class="title-center">${esc(c.title||"Chapter")}</div>
   <div class="row" style="flex:0 0 auto"><button class="iconbtn small" onclick="editChapter()">✎</button></div>
  </div></div>
- <div class="reader-body"><div id="readerText" class="reader-text ${state.vertical?'vertical':''}">${esc(c.text)}</div></div>
+ <div class="reader-body"><div id="readerText" class="reader-text ${state.vertical?'vertical':''} ${indentOn()?'indent':''}">${renderBodyHTML(c.text)}</div></div>
  <div class="progresswrap">
   <input class="seek" type="range" min="1" max="${total}" value="${idx+1}" ${total<=1?"disabled":""} onchange="jumpChapter(this.value)">
   <div class="seek-label">${idx+1} / ${total}</div>
@@ -892,7 +1027,9 @@ function cycleTheme(){
 }
 function setDirection(v){const r=currentReaderRatio();state.vertical=v;renderReader(r)}
 function font(delta){let e=document.getElementById("readerText");if(!e)return;let n=parseFloat(getComputedStyle(e).fontSize)+delta;n=Math.max(14,Math.min(34,n));e.style.fontSize=n+"px";try{localStorage.setItem("my-books-font",n)}catch(err){}}
-function openReaderSettings(){modal(`<h2>読書設定</h2><div class="field"><label>表示方向</label><div class="row"><button class="secondary ${!state.vertical?'':''}" onclick="setDirection(false);closeModal()">横書き</button><button class="secondary" onclick="setDirection(true);closeModal()">縦書き</button></div></div><div class="field"><label>文字サイズ</label><div class="row"><button class="secondary" onclick="font(-1)">A−</button><button class="secondary" onclick="font(1)">A＋</button></div></div><button class="secondary" onclick="closeModal()">閉じる</button>`)}
+function openReaderSettings(){modal(`<h2>読書設定</h2><div class="field"><label>表示方向</label><div class="row"><button class="secondary ${!state.vertical?'':''}" onclick="setDirection(false);closeModal()">横書き</button><button class="secondary" onclick="setDirection(true);closeModal()">縦書き</button></div></div><div class="field"><label>文字サイズ</label><div class="row"><button class="secondary" onclick="font(-1)">A−</button><button class="secondary" onclick="font(1)">A＋</button></div></div><div class="field"><label>段落の字下げ（行頭を1字下げる）</label><div class="row"><button class="secondary ${indentOn()?'on':''}" onclick="setIndent(true);closeModal()">あり</button><button class="secondary ${indentOn()?'':'on'}" onclick="setIndent(false);closeModal()">なし</button></div></div><button class="secondary" onclick="closeModal()">閉じる</button>`)}
+function indentOn(){ try{ return localStorage.getItem("my-books-indent")==="1"; }catch(e){ return false; } }
+function setIndent(on){ const r=currentReaderRatio(); try{ localStorage.setItem("my-books-indent",on?"1":"0"); }catch(e){} renderReader(r); }
 function editChapter(){
  state.editReturnY=window.scrollY; state.editReturnRatio=currentReaderRatio();
  const c=chapter();
@@ -903,6 +1040,15 @@ function editChapter(){
    <div class="texticons"><button onclick="copyChapterText('ec-text')">コピー</button><button onclick="pasteClipboard('ec-text')">貼り付け</button></div>
   </div>
   <textarea id="ec-text">${esc(c.text)}</textarea>
+  <div class="deco-bar">
+   <button onpointerdown="event.preventDefault()" onclick="decorate('head')">見出し</button>
+   <button class="d-gray" onpointerdown="event.preventDefault()" onclick="decorate('gray')">枠</button>
+   <button class="d-beige" onpointerdown="event.preventDefault()" onclick="decorate('beige')">枠</button>
+   <button class="d-blue" onpointerdown="event.preventDefault()" onclick="decorate('blue')">枠</button>
+   <button class="d-msg" onpointerdown="event.preventDefault()" onclick="decorate('msg')">メッセージ</button>
+   <button onpointerdown="event.preventDefault()" onclick="undecorate()">解除</button>
+  </div>
+  <div class="filehint" style="margin-top:4px">装飾：行を選択してから押します。解除は、外したい枠や見出しの中にカーソルを置いて押します</div>
   <div class="filehint" id="ec-jumphint" style="margin-top:6px"></div>
  </div>
  <div class="actions" style="margin-top:2px"><button class="primary" onclick="saveChapterEdit()">保存</button><button class="secondary danger" onclick="deleteChapter()">削除</button><button class="secondary" onclick="closeModal()">キャンセル</button></div>
@@ -913,14 +1059,13 @@ function editChapter(){
  <div class="field" style="margin-top:22px"><label>単語の一括置き換え</label>
   <div class="repl-box">
    <div id="repl-list">${replListHTML()}</div>
-   <button class="secondary repl-add" onclick="addReplacementInline()">＋ 語句を追加</button>
   </div>
   <div class="fmtopts" style="margin-top:9px">
    <label class="chk"><input type="radio" name="repl-scope" value="chapter" checked> このチャプターだけ</label>
    <label class="chk"><input type="radio" name="repl-scope" value="book"> この作品の全チャプター（即座に保存されます）</label>
   </div>
   <button class="secondary" onclick="runReplacements()" style="margin-top:9px;width:100%">置き換えを実行</button>
-  <div class="filehint" id="repl-status" style="margin-top:6px">登録した語句は全作品で共通です</div>
+  <div class="filehint" id="repl-status" style="margin-top:6px">この作品だけのリストです（他の作品には影響しません）</div>
  </div>
  <div class="field"><label>整形ツール</label>
   <div class="fmtopts">
@@ -1198,8 +1343,8 @@ function newBook(){modal(`<h2>本を追加</h2>
   <input type="hidden" id="nb-cover" value="">
  </div>
  <button class="primary" onclick="createBook()">追加</button> <button class="secondary" onclick="closeModal()">キャンセル</button>`)}
-function createBook(){let title=document.getElementById("nb-title").value.trim()||"新しい小説";data.books.push({id:uid("b"),title,author:document.getElementById("nb-author").value.trim(),cover:document.getElementById("nb-cover").value.trim(),status:"unread",tags:[],synopsis:"",volumes:[]});save();closeModal();renderShelf()}
-function openSettings(){modal(`<h2>設定</h2><div class="field"><label>読書表示</label><div class="small">リーダーでは横書き・縦書き、文字サイズ、背景テーマを切り替えられます。</div></div><div class="field"><label>翻訳整形</label><button class="secondary" onclick="closeModal();openReplacements()">単語の一括置き換えリストを編集</button></div><div class="field"><label>データ</label><div class="filehint" id="storageInfo" style="margin-bottom:10px">使用容量を確認中…</div><button class="secondary" onclick="exportData()">データを書き出す</button> <button class="secondary" onclick="importData()">データを読み込む</button></div><button class="secondary" onclick="closeModal()">閉じる</button>`);showStorageInfo()}
+function createBook(){let title=document.getElementById("nb-title").value.trim()||"新しい小説";data.books.push({id:uid("b"),title,author:document.getElementById("nb-author").value.trim(),cover:document.getElementById("nb-cover").value.trim(),status:"unread",tags:[],synopsis:"",replacements:[],volumes:[]});save();closeModal();renderShelf()}
+function openSettings(){modal(`<h2>設定</h2><div class="field"><label>読書表示</label><div class="small">リーダーでは横書き・縦書き、文字サイズ、背景テーマを切り替えられます。</div></div><div class="field"><label>データ</label><div class="filehint" id="storageInfo" style="margin-bottom:10px">使用容量を確認中…</div><button class="secondary" onclick="exportData()">データを書き出す</button> <button class="secondary" onclick="importData()">データを読み込む</button></div><button class="secondary" onclick="closeModal()">閉じる</button>`);showStorageInfo()}
 async function showStorageInfo(){
  const el=document.getElementById("storageInfo"); if(!el) return;
  const mb=n=>n<1024*1024?Math.max(1,Math.round(n/1024))+"KB":(n/1024/1024).toFixed(1)+"MB";
