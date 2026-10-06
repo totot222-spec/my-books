@@ -132,6 +132,8 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 .repl-add{width:100%;margin-top:9px;font-size:13px;padding:9px}
 .repl-foot{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
 .repl-link{font-size:13px;font-weight:700;color:var(--accent);padding:6px 0;white-space:nowrap;background:none}
+.repl-item select{flex:1;min-width:0;padding:9px 8px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:14px}
+.ab-cont{width:100%;font-size:13px}
 .repl-link.muted{font-size:12px;font-weight:600;color:var(--muted)}
 
 /* reader */
@@ -284,6 +286,14 @@ function idb(){
 }
 function idbGet(key){return idb().then(db=>new Promise((res,rej)=>{const q=db.transaction(IDB_STORE,"readonly").objectStore(IDB_STORE).get(key);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}))}
 function idbPut(key,val){return idb().then(db=>new Promise((res,rej)=>{const t=db.transaction(IDB_STORE,"readwrite");t.objectStore(IDB_STORE).put(val,key);t.oncomplete=()=>res();t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)}))}
+function normBoxAuto(a){
+ if(!a||typeof a!=="object") return null;
+ return {
+  rules:Array.isArray(a.rules)?a.rules.filter(r=>r&&typeof r.key==="string").map(r=>({key:r.key,style:["gray","beige","blue","msg"].includes(r.style)?r.style:"gray"})):[],
+  gray:a.gray!==false,
+  cont:typeof a.cont==="string"?a.cont:""
+ };
+}
 function normalizeData(d){
   if(!d || !Array.isArray(d.books)) return structuredClone(defaultData);
   const normR=a=>Array.isArray(a)?a.filter(r=>r&&typeof r.from==="string").map(r=>({from:r.from,to:typeof r.to==="string"?r.to:""})):[];
@@ -295,6 +305,7 @@ function normalizeData(d){
     synopsis:typeof b.synopsis==="string"?b.synopsis:"",
     author:typeof b.author==="string"?b.author:"",
     replacements:Array.isArray(b.replacements)?normR(b.replacements):legacyRepl.map(r=>({...r})),
+    boxAuto:normBoxAuto(b.boxAuto),
     lastRead:(b.lastRead&&typeof b.lastRead==="object"&&typeof b.lastRead.volumeId==="string"&&typeof b.lastRead.chapterId==="string")?{volumeId:b.lastRead.volumeId,chapterId:b.lastRead.chapterId,scrollRatio:typeof b.lastRead.scrollRatio==="number"?b.lastRead.scrollRatio:0}:null,
     volumes:Array.isArray(b.volumes)?b.volumes.map((v,j)=>({
       id:v.id||uid("v"), name:v.name||`第${j+1}巻`, cover:v.cover||"",
@@ -658,6 +669,151 @@ function renderBodyHTML(text){
  }
  if(box) closeBox(); // 閉じ忘れは最後まで枠にする
  return html;
+}
+// ---- 枠の自動付け（作品ごとのルール） ----
+const BOXAUTO_PRESET={
+ rules:[{key:"<シナリオノート",style:"beige"},{key:"[情報を閲覧",style:"blue"},{key:"ランク",style:"blue"}],
+ gray:true,
+ cont:"ランク,役柄,役名,脚本,台本,台詞,特殊能力,主な登場人物,主要登場人物,登場人物,シナリオクリア条件,クリア条件,テイク"
+};
+function boxAutoCfg(){ const b=book(); return b&&b.boxAuto; }
+const OPEN_CLS={"[":"[","［":"[","<":"<","＜":"<","〈":"<","【":"【"};
+const CLOSE_OF={"[":/[\]］]/,"<":/[>＞〉]/,"【":/】/};
+function bracketDepthDelta(str){
+ let d=0;
+ for(const ch of str){
+  if("[［<＜〈【「『（(".includes(ch)) d++;
+  else if("]］>＞〉】」』）)".includes(ch)) d--;
+ }
+ return d;
+}
+function escRe(x){ return x.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
+function contKeys(cfg){ return (cfg.cont||"").split(/[,、，\s]+/).map(x=>x.trim()).filter(Boolean); }
+function ruleMatches(rule,t){
+ const k=rule.key.trim(); if(!k) return false;
+ const kc=OPEN_CLS[k[0]];
+ if(kc){ // 「[情報を閲覧」のように括弧で始まるキー → 行頭の括弧の中にその文字があれば一致
+  if(OPEN_CLS[t[0]]!==kc) return false;
+  const m=CLOSE_OF[kc].exec(t); const inner=m?t.slice(1,m.index):t.slice(1);
+  return inner.includes(k.slice(1));
+ }
+ return t.startsWith(k);
+}
+function boxTrigger(t,cfg){
+ for(const r of cfg.rules){ if(ruleMatches(r,t)) return {style:r.style,header:!!OPEN_CLS[r.key.trim()[0]],rule:true}; }
+ if(cfg.gray && /^[\[［!！]/.test(t)) return {style:"gray",header:true,rule:false};
+ return null;
+}
+function isBoxContLine(t,cfg){
+ if(/^[\[［<＜〈【\-－・!！]/.test(t)) return true;
+ return contKeys(cfg).some(k=>t.startsWith(k));
+}
+function tidyBoxLines(lines,cfg){
+ // 1) 括弧が閉じていない行は次の行とつなげる（OCRの途中改行）
+ const merged=[]; let depth=0;
+ for(const raw of lines){
+  const t=raw.trim(); if(!t) continue;
+  if(merged.length && depth>0 && !isBoxContLine(t,cfg)) merged[merged.length-1]+=t;
+  else merged.push(t);
+  depth=Math.max(0,bracketDepthDelta(merged[merged.length-1]));
+ }
+ // 2) つながってしまった項目を分ける
+ const keys=contKeys(cfg).map(escRe).join("|");
+ const out=[];
+ for(let s of merged){
+  s=s.replace(/([\]］])[ 　]*(?=[<＜〈])/g,"$1\n");                         // ]<… → 改行
+  s=s.replace(/([>＞〉\]］。？?！!）)」])[ 　]*(?=[-－][ 　])/g,(m,ch,off)=>off<8?m:ch+"\n"); // 。- … → 改行（「！注意！ - 」のような短い頭は分けない）
+  if(keys){
+   s=s.replace(new RegExp("(\\S)[ 　]*(?=[-－][ 　]*(?:"+keys+"))","g"),"$1\n");          // …卿- シナリオクリア条件
+   s=s.replace(new RegExp("([^\\s\\-－])[ 　]*(?=(?:"+keys+")[ 　]*[-－ー―—:：])","g"),"$1\n"); // …号脚本－ → 改行
+  }
+  s.split("\n").map(x=>x.trim()).filter(Boolean).forEach(x=>out.push(x));
+ }
+ return out;
+}
+function autoBoxText(text,cfg,tidy){
+ const lines=String(text||"").split("\n");
+ const out=[]; let inExisting=false, made=0;
+ for(let i=0;i<lines.length;i++){
+  const line=lines[i], t=line.trim();
+  if(/^:::/.test(t)){ inExisting=!inExisting; out.push(line); continue; }  // すでに付いている枠はそのまま
+  if(inExisting||!t){ out.push(line); continue; }
+  const trig=boxTrigger(t,cfg);
+  if(!trig){ out.push(line); continue; }
+  const box=[line]; let depth=Math.max(0,bracketDepthDelta(t)); let j=i+1;
+  while(j<lines.length){
+   const lt=lines[j].trim();
+   if(!lt||/^:::/.test(lt)) break;
+   let take=false;
+   if(depth>0) take=true;
+   else {
+    const tg=boxTrigger(lt,cfg);
+    if(tg&&tg.rule&&(tg.header||tg.style!==trig.style)) take=false;
+    else if(tg&&!tg.rule&&/^[!！]/.test(lt)&&trig.style!=="gray") take=false;
+    else if(tg) take=true;
+    else if(isBoxContLine(lt,cfg)) take=true;
+    else { const nx=(lines[j+1]||"").trim(); take=/^[\-－・]/.test(nx)&&lt.length<160; } // 項目の途中で改行された行
+    if(!take) break;
+   }
+   box.push(lines[j]); depth=Math.max(0,depth+bracketDepthDelta(lt)); j++;
+  }
+  const body=tidy?tidyBoxLines(box,cfg):box.map(x=>x.trim()).filter(Boolean);
+  out.push("::: "+BOX_NAMES[trig.style], ...body, ":::"); made++;
+  i=j-1;
+ }
+ return {text:out.join("\n"),made};
+}
+function autoBoxRulesHTML(){
+ const cfg=boxAutoCfg();
+ if(!cfg) return `<div class="repl-empty">この作品にはまだルールがありません</div><div class="repl-foot"><button class="repl-link" onclick="boxAutoPreset()">おすすめのルールを入れる</button><button class="repl-link muted" onclick="boxAutoAddRule()">＋ 自分で追加</button></div>`;
+ const opt=v=>Object.keys(BOX_NAMES).map(k=>`<option value="${k}" ${k===v?"selected":""}>${BOX_NAMES[k]}</option>`).join("");
+ return `${cfg.rules.map((r,i)=>`<div class="repl-item">
+   <input value="${esc(r.key)}" placeholder="例: [情報を閲覧" onchange="boxAutoSet(${i},'key',this.value)">
+   <span class="repl-arrow">→</span>
+   <select onchange="boxAutoSet(${i},'style',this.value)">${opt(r.style)}</select>
+   <button class="repl-del" onclick="boxAutoDel(${i})">✕</button></div>`).join("")}
+  <label class="chk" style="margin-top:8px"><input type="checkbox" ${cfg.gray?"checked":""} onchange="boxAutoCfg().gray=this.checked;save()"> その他の [ や ！ で始まる行はグレー枠にする</label>
+  <div class="small" style="margin:10px 0 4px">枠の続きとみなす行の始まり（カンマ区切り）</div>
+  <input class="ab-cont" value="${esc(cfg.cont)}" onchange="boxAutoCfg().cont=this.value;save()">
+  <div class="repl-foot"><button class="repl-link" onclick="boxAutoAddRule()">＋ ルールを追加</button><button class="repl-link muted" onclick="boxAutoClear()">ルールを消す</button></div>`;
+}
+function refreshBoxAuto(){ const el=document.getElementById("ab-rules"); if(el) el.innerHTML=autoBoxRulesHTML(); }
+function boxAutoPreset(){ const b=book(); b.boxAuto=JSON.parse(JSON.stringify(BOXAUTO_PRESET)); save(); refreshBoxAuto(); }
+function boxAutoAddRule(){ const b=book(); if(!b.boxAuto) b.boxAuto={rules:[],gray:true,cont:""}; b.boxAuto.rules.push({key:"",style:"gray"}); save(); refreshBoxAuto(); }
+function boxAutoSet(i,f,v){ const c=boxAutoCfg(); if(c&&c.rules[i]){ c.rules[i][f]=v; save(); } }
+function boxAutoDel(i){ const c=boxAutoCfg(); if(c){ c.rules.splice(i,1); save(); refreshBoxAuto(); } }
+function boxAutoClear(){ if(!confirm("この作品の枠ルールを消しますか？（本文に付いた枠はそのままです）")) return; book().boxAuto=null; save(); refreshBoxAuto(); }
+let boxAutoUndo=null;
+function runAutoBox(scope){
+ const cfg=boxAutoCfg(); const st=document.getElementById("ab-status");
+ if(!cfg||(!cfg.rules.length&&!cfg.gray)){ alert("先にルールを設定してください（「おすすめのルールを入れる」でも始められます）"); return; }
+ const tidy=document.getElementById("ab-tidy")?.checked!==false;
+ const ta=document.getElementById("ec-text");
+ if(scope==="chapter"){
+  const before=ta.value; const r=autoBoxText(before,cfg,tidy);
+  ta.value=r.text; updateEditorCount();
+  boxAutoUndo={kind:"chapter",text:before};
+  if(st) st.innerHTML=r.made?`${r.made}個の枠を付けました（保存を押すと確定） <button class="repl-link" onclick="undoAutoBox()">元に戻す</button>`:"枠にする行は見つかりませんでした";
+  return;
+ }
+ const b=book();
+ if(!confirm(`「${b.title}」の全チャプターに枠を自動で付けます。\nすでに付いている枠はそのままです。よろしいですか？`)) return;
+ const cur=chapter(); if(cur&&ta) cur.text=ta.value;
+ const backup=[]; let total=0, chs=0;
+ b.volumes.forEach(v=>v.chapters.forEach(c=>{
+  const r=autoBoxText(c.text,cfg,tidy);
+  if(r.made){ backup.push({c,text:c.text}); c.text=r.text; total+=r.made; chs++; if(cur&&c.id===cur.id&&ta){ ta.value=c.text; updateEditorCount(); } }
+ }));
+ save();
+ boxAutoUndo={kind:"book",backup};
+ if(st) st.innerHTML=total?`${chs}チャプターに計${total}個の枠を付けて保存しました <button class="repl-link" onclick="undoAutoBox()">元に戻す</button>`:"枠にする行は見つかりませんでした";
+}
+function undoAutoBox(){
+ const u=boxAutoUndo; if(!u) return;
+ const ta=document.getElementById("ec-text"); const st=document.getElementById("ab-status");
+ if(u.kind==="chapter"){ if(ta){ ta.value=u.text; updateEditorCount(); } }
+ else { u.backup.forEach(x=>{ x.c.text=x.text; }); save(); const cur=chapter(); if(cur&&ta){ ta.value=cur.text; updateEditorCount(); } }
+ boxAutoUndo=null; if(st) st.textContent="元に戻しました";
 }
 function updateEditorCount(){ const ta=document.getElementById("ec-text"), l=document.getElementById("ec-count"); if(ta&&l) l.textContent=count(ta.value).toLocaleString()+"文字"; }
 function decorate(kind){
@@ -1066,6 +1222,12 @@ function editChapter(){
   </div>
   <button class="secondary" onclick="runReplacements()" style="margin-top:9px;width:100%">置き換えを実行</button>
   <div class="filehint" id="repl-status" style="margin-top:6px">この作品だけのリストです（他の作品には影響しません）</div>
+ </div>
+ <div class="field" style="margin-top:22px"><label>枠の自動付け（この作品のルール）</label>
+  <div class="repl-box" id="ab-rules">${autoBoxRulesHTML()}</div>
+  <label class="chk" style="margin-top:9px"><input type="checkbox" id="ab-tidy" checked> 枠の中でつながった項目を改行で分ける</label>
+  <div class="row" style="margin-top:9px"><button class="secondary" onclick="runAutoBox('chapter')">このチャプター</button><button class="secondary" onclick="runAutoBox('book')">作品の全チャプター</button></div>
+  <div class="filehint" id="ab-status" style="margin-top:6px">ルールに合う行を見つけて、自動で枠を付けます</div>
  </div>
  <div class="field"><label>整形ツール</label>
   <div class="fmtopts">
