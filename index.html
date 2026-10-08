@@ -92,6 +92,9 @@ button{border:0;background:none;color:inherit;cursor:pointer}
 .chapter-move button{width:26px;height:22px;font-size:10px;line-height:1;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center}
 .chapter-move button:disabled{opacity:.25}
 .chapter-move button:not(:disabled):active{background:#eaf1fc;color:var(--accent-dark)}
+.vol-actions{display:flex;gap:6px;flex:0 0 auto}
+.vol-actions button{font-size:12.5px;font-weight:700;padding:7px 11px;border-radius:10px;background:#f1f5fb;color:var(--accent-dark)}
+.vol-actions button.danger{background:#fdeeee;color:#d23b3b}
 .chapter-merge{font-size:11.5px;color:var(--accent);font-weight:600;margin-top:5px;display:inline-block}
 .chapter:last-child{border-bottom:0}
 .chapter-main{flex:1;min-width:0}
@@ -178,18 +181,16 @@ input[type=range].seek{width:100%;accent-color:var(--accent)}
 .reader[data-theme=dark] .sb-gray{background:#22262d;border-color:#5b616b}
 .reader[data-theme=dark] .sb-beige{background:#2d2a24;border-color:#5a5243}
 .reader[data-theme=dark] .sb-blue{background:#20252f;border-color:#4f6390}
-.sb-msg{padding:0;background:#e8e9eb;border:3px solid #3a8be0;border-radius:18px 18px 2px 2px;overflow:hidden;font-size:.92em}
-.msg-bar{height:1.5em;background:#3a8be0}
-.msg-body{padding:.75em .85em .9em;display:flex;flex-direction:column;align-items:flex-start;gap:.55em}
-.bubble{background:#f8f9fb;border:2px solid #cfe0f4;border-radius:1.2em;padding:.32em .95em;max-width:88%;line-height:1.55;text-indent:0;white-space:pre-wrap}
-.reader-text.vertical .msg-body{align-items:flex-start}
-.reader[data-theme=sepia] .sb-msg{background:#e9e1cf;border-color:#4a86c8}
-.reader[data-theme=sepia] .msg-bar{background:#4a86c8}
-.reader[data-theme=sepia] .bubble{background:#faf6ec;border-color:#d6cfbd}
-.reader[data-theme=dark] .sb-msg{background:#2a2d33;border-color:#3d74b8}
-.reader[data-theme=dark] .msg-bar{background:#3d74b8}
-.reader[data-theme=dark] .bubble{background:#363a42;border-color:#4b5566;color:#e3e6ea}
-.deco-bar .d-msg{background:#e8e9eb;border-color:#3a8be0;border-top-width:6px;color:#2f66c2;padding-top:3px}
+.sb-msg{padding:1em .95em;background:#a9bfd6;border:none;border-radius:16px;font-size:.92em}
+.msg-body{display:flex;flex-direction:column;align-items:flex-start;gap:.75em}
+.bubble{background:#fff;border-radius:.85em;padding:.42em .95em;max-width:80%;line-height:1.55;text-indent:0;white-space:pre-wrap;color:#1c2430}
+.bubble.me{align-self:flex-end;background:#fde63c}
+.reader[data-theme=sepia] .sb-msg{background:#b8c3cc}
+.reader[data-theme=dark] .sb-msg{background:#3a4656}
+.reader[data-theme=dark] .bubble{background:#e6e9ee;color:#1c2430}
+.reader[data-theme=dark] .bubble.me{background:#e8d23a}
+.deco-bar .d-msg{background:#a9bfd6;color:#1f3550}
+.deco-bar .d-me{background:#fde63c;color:#5a4a00}
 .deco-bar{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:8px}
 .deco-lbl{font-size:12px;color:var(--muted);margin-right:2px}
 .deco-bar button{font-size:12.5px;font-weight:600;color:var(--accent-dark);background:#f1f5fb;border-radius:9px;padding:6px 8px;border:2px solid transparent}
@@ -436,10 +437,12 @@ function joinBrokenLines(text){
  // 行末が句点などの文末記号で終わっていない行は、OCRの改行ズレとみなして次の行と結合する
  const enders=["。","！","？","」","…","』","”"];
  let lines=text.split("\n");
- let out=[]; let buffer=null;
+ let out=[]; let buffer=null; let inBox=false;
  lines.forEach(raw=>{
   let line=raw;
   if(line.trim()===""){ if(buffer!==null){out.push(buffer);buffer=null;} out.push(""); return; }
+  if(/^:::/.test(line.trim())){ if(buffer!==null){out.push(buffer);buffer=null;} inBox=!inBox; out.push(line.trim()); return; }
+  if(inBox){ out.push(line); return; } // 枠の中の行はつなげない
   if(line.trim()==="***"||isMarkupLine(line)){ if(buffer!==null){out.push(buffer);buffer=null;} out.push(line.trim()); return; }
   let trimmedEnd=line.replace(/[\s　]+$/,"");
   buffer = buffer===null ? trimmedEnd : buffer+trimmedEnd;
@@ -647,8 +650,12 @@ function renderBodyHTML(text){
  const closeBox=()=>{
   if(box==="msg"){
    // メッセージ画面：1行＝吹き出し1つ（空行は詰める）
-   const bubbles=boxLines.filter(l=>l.trim()!=="").map(l=>`<div class="bubble">${esc(l.trim())}</div>`).join("");
-   html+=`<div class="sysbox sb-msg"><div class="msg-bar"></div><div class="msg-body">${bubbles}</div></div>`;
+   // 「> 」で始まる行＝自分のメッセージ（右・黄色）、それ以外＝相手（左・白）
+   const bubbles=boxLines.filter(l=>l.trim()!=="").map(l=>{
+    const t=l.trim(), me=/^[>＞]/.test(t);
+    return `<div class="bubble${me?" me":""}">${esc(me?t.replace(/^[>＞][ 　]*/,""):t)}</div>`;
+   }).join("");
+   html+=`<div class="sysbox sb-msg"><div class="msg-body">${bubbles}</div></div>`;
   } else {
    html+=`<div class="sysbox sb-${box}">${boxLines.map(l=>lineHTML(l,true)).join("")}</div>`;
   }
@@ -829,6 +836,21 @@ function decorate(kind){
  } else {
   out=`::: ${BOX_NAMES[kind]}\n${block}\n:::`;
  }
+ ta.value=v.slice(0,ls)+out+v.slice(le);
+ ta.focus(); try{ ta.setSelectionRange(ls,ls+out.length); }catch(err){}
+ updateEditorCount();
+}
+function toggleMe(){
+ // 選んだ行を「自分のメッセージ（右側）」にする／戻す
+ const ta=document.getElementById("ec-text"); if(!ta) return;
+ const v=ta.value; let s=ta.selectionStart, e=ta.selectionEnd;
+ if(e>s && v[e-1]==="\n") e--;
+ const ls=v.lastIndexOf("\n",s-1)+1; let le=v.indexOf("\n",e); if(le<0) le=v.length;
+ const lines=v.slice(ls,le).split("\n");
+ const target=lines.filter(l=>l.trim()&&!/^:::/.test(l.trim()));
+ if(!target.length) return;
+ const allMe=target.every(l=>/^[>＞]/.test(l.trim()));
+ const out=lines.map(l=>{ const t=l.trim(); if(!t||/^:::/.test(t)) return l; return allMe?t.replace(/^[>＞][ 　]*/,""):(/^[>＞]/.test(t)?t:"> "+t); }).join("\n");
  ta.value=v.slice(0,ls)+out+v.slice(le);
  ta.focus(); try{ ta.setSelectionRange(ls,ls+out.length); }catch(err){}
  updateEditorCount();
@@ -1018,7 +1040,7 @@ function renderDetail(){
    <div class="volrow" onclick="toggleVolume('${v.id}')">
     <div class="volicon" onclick="event.stopPropagation();editVolume('${v.id}')">${v.cover?`<img src="${esc(v.cover)}">`:`${vi+1}巻`}</div>
     <div class="volinfo"><b>${esc(v.name)}</b><span>${v.chapters.length} chapters・${v.chapters.reduce((a,c)=>a+count(c.text),0).toLocaleString()}文字</span></div>
-    <span class="chev">›</span>
+    ${state.chapterEditMode?`<div class="vol-actions" onclick="event.stopPropagation()"><button onclick="editVolume('${v.id}')">編集</button><button class="danger" onclick="deleteVolume('${v.id}')">削除</button></div>`:`<span class="chev">›</span>`}
    </div>
    <div id="vol-${v.id}" class="chapter-list hidden">${v.chapters.map((c,ci)=>`<div class="chapter" onclick="openChapter('${v.id}','${c.id}')">
     ${state.chapterEditMode?`<div class="chapter-move" onclick="event.stopPropagation()">
@@ -1202,9 +1224,10 @@ function editChapter(){
    <button class="d-beige" onpointerdown="event.preventDefault()" onclick="decorate('beige')">枠</button>
    <button class="d-blue" onpointerdown="event.preventDefault()" onclick="decorate('blue')">枠</button>
    <button class="d-msg" onpointerdown="event.preventDefault()" onclick="decorate('msg')">メッセージ</button>
+   <button class="d-me" onpointerdown="event.preventDefault()" onclick="toggleMe()">右側</button>
    <button onpointerdown="event.preventDefault()" onclick="undecorate()">解除</button>
   </div>
-  <div class="filehint" style="margin-top:4px">装飾：行を選択してから押します。解除は、外したい枠や見出しの中にカーソルを置いて押します</div>
+  <div class="filehint" style="margin-top:4px">装飾：行を選択してから押します。メッセージ枠の中で自分の発言は「右側」で黄色・右寄せに。解除は、外したい枠や見出しの中にカーソルを置いて押します</div>
   <div class="filehint" id="ec-jumphint" style="margin-top:6px"></div>
  </div>
  <div class="actions" style="margin-top:2px"><button class="primary" onclick="saveChapterEdit()">保存</button><button class="secondary danger" onclick="deleteChapter()">削除</button><button class="secondary" onclick="closeModal()">キャンセル</button></div>
@@ -1331,8 +1354,8 @@ function saveVolumeEdit(vid){
  closeModal();renderDetail();
 }
 function deleteVolume(vid){
- if(!confirm("この巻とすべてのチャプターを削除しますか？")) return;
- const b=book();
+ const b=book(); const v=b.volumes.find(x=>x.id===vid); if(!v) return;
+ if(!confirm(`「${v.name}」を削除しますか？\n中の${v.chapters.length}チャプターもすべて消え、元に戻せません。`)) return;
  b.volumes=b.volumes.filter(x=>x.id!==vid);
  save();closeModal();renderDetail();
 }
