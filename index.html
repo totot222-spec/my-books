@@ -706,9 +706,23 @@ function ruleMatches(rule,t){
  }
  return t.startsWith(k);
 }
+// 「[」で始まっても、すぐに「]」で閉じない行は地の文（OCRで「が[になった等）とみなす
+const BRACKET_CLOSE_WITHIN=90;
+function closesSoon(t){
+ if(!/^[\[［]/.test(t)) return true;
+ const m=/[\]］]/.exec(t);
+ return !!m && m.index<=BRACKET_CLOSE_WITHIN;
+}
 function boxTrigger(t,cfg){
- for(const r of cfg.rules){ if(ruleMatches(r,t)) return {style:r.style,header:!!OPEN_CLS[r.key.trim()[0]],rule:true}; }
- if(cfg.gray && /^[\[［!！]/.test(t)) return {style:"gray",header:true,rule:false};
+ for(const r of cfg.rules){
+  if(ruleMatches(r,t)){
+   const header=!!OPEN_CLS[r.key.trim()[0]];
+   if(header && !closesSoon(t)) continue;
+   return {style:r.style,header,rule:true};
+  }
+ }
+ if(cfg.gray && /^[\[［]/.test(t) && closesSoon(t)) return {style:"gray",header:true,rule:false};
+ if(cfg.gray && /^[!！]/.test(t) && t.length<=150) return {style:"gray",header:true,rule:false};
  return null;
 }
 function isBoxContLine(t,cfg){
@@ -720,7 +734,7 @@ function tidyBoxLines(lines,cfg){
  const merged=[]; let depth=0;
  for(const raw of lines){
   const t=raw.trim(); if(!t) continue;
-  if(merged.length && depth>0 && !isBoxContLine(t,cfg)) merged[merged.length-1]+=t;
+  if(merged.length && depth>0 && !isBoxContLine(t,cfg) && merged[merged.length-1].length+t.length<=200) merged[merged.length-1]+=t; // 段落ほどの長さにはしない
   else merged.push(t);
   depth=Math.max(0,bracketDepthDelta(merged[merged.length-1]));
  }
@@ -747,12 +761,12 @@ function autoBoxText(text,cfg,tidy){
   if(inExisting||!t){ out.push(line); continue; }
   const trig=boxTrigger(t,cfg);
   if(!trig){ out.push(line); continue; }
-  const box=[line]; let depth=Math.max(0,bracketDepthDelta(t)); let j=i+1;
+  const box=[line]; let depth=Math.max(0,bracketDepthDelta(t)); let j=i+1; let depthCarry=0; let boxChars=t.length;
   while(j<lines.length){
    const lt=lines[j].trim();
    if(!lt||/^:::/.test(lt)) break;
    let take=false;
-   if(depth>0) take=true;
+   if(depth>0 && depthCarry<2 && boxChars<400){ take=true; depthCarry++; }
    else {
     const tg=boxTrigger(lt,cfg);
     if(tg&&tg.rule&&(tg.header||tg.style!==trig.style)) take=false;
@@ -762,7 +776,7 @@ function autoBoxText(text,cfg,tidy){
     else { const nx=(lines[j+1]||"").trim(); take=/^[\-－・]/.test(nx)&&lt.length<160; } // 項目の途中で改行された行
     if(!take) break;
    }
-   box.push(lines[j]); depth=Math.max(0,depth+bracketDepthDelta(lt)); j++;
+   box.push(lines[j]); boxChars+=lt.length; if(depth<=0) depthCarry=0; depth=Math.max(0,depth+bracketDepthDelta(lt)); j++;
   }
   const body=tidy?tidyBoxLines(box,cfg):box.map(x=>x.trim()).filter(Boolean);
   out.push("::: "+BOX_NAMES[trig.style], ...body, ":::"); made++;
